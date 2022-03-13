@@ -46,7 +46,7 @@ def train(train_loader, GAN_Model, netD, VGG_MODEL, optG, optD, device, losses):
       Sobel.to(device)
       Loss_S = Sobel(realLAB,predLAB) * 0.1
       #############
-      Loss_G = Loss_KLD + Loss_MSE + Loss_WL + Loss_S #总loss
+      Loss_G = Loss_MSE + Loss_WL + Loss_S #总loss
       Loss_G.backward()
       optG.step() # 使用生成网络的优化器优化
       losses['G_losses'].append(Loss_G.item())
