@@ -46,7 +46,7 @@ def imag_gird(axrow, orig, batchL, preds, epoch,idx):
 
   ax[2].imshow(preds)
   ax[2].set_title('Pred Image')
-  plt.savefig(f'sample_preds_{epoch}_{idx}')
+  plt.savefig(f'../result/sample_preds_{epoch}_{idx}')
   plt.close()
 
 def plot_some(test_data, colorization_model, device, epoch):
