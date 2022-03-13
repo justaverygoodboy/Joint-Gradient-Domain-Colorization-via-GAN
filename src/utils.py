@@ -36,7 +36,7 @@ def reconstruct_no(batchX, predictedY):
     return result
 
 
-def imag_gird(axrow, orig, batchL, preds, epoch):
+def imag_gird(axrow, orig, batchL, preds, epoch,idx):
   fig , ax = plt.subplots(1,3, figsize=(15,15))
   ax[0].imshow(orig)
   ax[0].set_title('Original Image')
@@ -46,7 +46,7 @@ def imag_gird(axrow, orig, batchL, preds, epoch):
 
   ax[2].imshow(preds)
   ax[2].set_title('Pred Image')
-  plt.savefig(f'sample_preds_{epoch}')
+  plt.savefig(f'sample_preds_{epoch}_{idx}')
   plt.close()
 
 def plot_some(test_data, colorization_model, device, epoch):
@@ -63,16 +63,13 @@ def plot_some(test_data, colorization_model, device, epoch):
       realAB = torch.tensor(realAB).to(device).float()
       colorization_model.eval()
       batch_predAB, _ = colorization_model(batchL_3)
-      img = cv2.imread(filepath)
       batch_predAB = batch_predAB.cpu().numpy().reshape((224,224,2))
       batchL = batchL.cpu().numpy().reshape((224,224,1))
       realAB = realAB.cpu().numpy().reshape((224,224,2))
       orig = cv2.imread(filepath)
       orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (224,224))
-      # orig = reconstruct_no(preprocess(batchL), preprocess(realAB))
       preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
-      imag_gird(0, orig, batchL, preds, epoch-1)
-      plt.show()
+      imag_gird(0, orig, batchL, preds, epoch-1,idx)
 
 def create_checkpoint(epoch, netG, optG, netD, optD, max_checkpoint, save_path=config.CHECKPOINT_DIR):
   print('Saving Model and Optimizer weights.....')
