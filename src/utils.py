@@ -5,7 +5,7 @@ import config
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
-# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 def preprocess(imgs):
   try:
     imgs = imgs.detach().numpy()
