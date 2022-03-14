@@ -2,9 +2,6 @@ import config
 import torch
 import numpy as np
 from tqdm import tqdm
-import torch.nn as nn
-import torch.nn.functional as F
-import lossfunc
 
 def train(train_loader, GAN_Model, netD, VGG_MODEL, optG, optD, device, losses):
   batch = 0
@@ -37,10 +34,9 @@ def train(train_loader, GAN_Model, netD, VGG_MODEL, optG, optD, device, losses):
       realLAB = torch.cat([trainL, trainAB], dim=1) #真实的图像
       predLAB = torch.cat([trainL, predAB], dim=1) #生成器得到的：预测的图像
       ############ Loss ##################################
-      Loss_MSE = nn.MSELoss()(predAB.float(), trainAB.float()) #MSE是预测的AB和真实AB的L2
-      Loss_WL = wgan_loss(discpred.float(), True) * 0.1 # WL是辨别器输出和真实的loss
+      Loss_WL = wgan_loss(discpred.float(), True) # WL是辨别器输出和真实的loss
       #############
-      Loss_G = Loss_MSE + Loss_WL #总loss
+      Loss_G = Loss_WL #总loss
       Loss_G.backward()
       optG.step() # 使用生成网络的优化器优化
       losses['G_losses'].append(Loss_G.item())
@@ -69,7 +65,7 @@ def train(train_loader, GAN_Model, netD, VGG_MODEL, optG, optD, device, losses):
       losses['EPOCH_D_losses'].append(Loss_D.item())
       # Output training stats
       if batch % 100 == 0: #原本是100
-        print('Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f / %.8f | MSE: %.8f | WGAN_F(G): %.8f | WGAN_F(D): %.8f | WGAN_R(D): %.8f | WGAN_A(D): %.8f'
-            % (Loss_D.item(), Loss_G.item(), D_x, D_G_z1, D_G_z2,Loss_MSE.item(),Loss_WL.item(), Loss_D_Fake.item(), Loss_D_Real.item(), Loss_D_avg.item()))
+        print('Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f / %.8f | WGAN_F(G): %.8f | WGAN_F(D): %.8f | WGAN_R(D): %.8f | WGAN_A(D): %.8f'
+            % (Loss_D.item(), Loss_G.item(), D_x, D_G_z1, D_G_z2,Loss_WL.item(), Loss_D_Fake.item(), Loss_D_Real.item(), Loss_D_avg.item()))
 
       
