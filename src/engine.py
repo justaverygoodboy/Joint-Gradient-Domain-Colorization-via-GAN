@@ -28,7 +28,7 @@ def train(train_loader, GAN_Model, netD, VGG_MODEL, optG, optD, device, losses):
       trainAB = torch.tensor(trainAB, device=device).float()
       ############ GAN MODEL ( Training Generator) ###################
       optG.zero_grad()
-      predAB, classVector, discpred = GAN_Model(trainL, trainL_3) #得到预测的AB、类向量、D辨别结果
+      predAB, discpred = GAN_Model(trainL, trainL_3) #得到预测的AB、类向量、D辨别结果
       D_G_z1 = discpred.mean().item() # 获取辨别结果的平均值
       ############ 先获得真实的图像和生成的图像 #############
       realLAB = torch.cat([trainL, trainAB], dim=1) #真实的图像

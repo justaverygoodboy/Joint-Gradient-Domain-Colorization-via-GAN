@@ -89,11 +89,6 @@ class colorization_model(nn.Module):
     global_features2 = self.global_features2_dense3(global_features2) #[None, 256]
     global_features2 = global_features2.unsqueeze(2).expand(-1,256,28*28) #[None, 256, 784] 这里是进行填充吗expand
     global_features2 = global_features2.view((-1,256,28,28)) #[None, 256, 28, 28]
-    #灰色部分
-    global_featureClass = self.global_featuresClass_flatten(global_features) #[None, 512*7*7]
-    global_featureClass = self.global_featuresClass_dense1(global_featureClass) #[None, 4096]
-    global_featureClass = self.global_featuresClass_dense2(global_featureClass) #[None, 4096]
-    global_featureClass = self.softmax(self.global_featuresClass_dense3(global_featureClass))#[None, 1000]
     
     # Mid Level Features 紫色部分
     midlevel_features = self.midlevel_conv1(vgg_out) #[None, 512, 28, 28]
@@ -116,7 +111,7 @@ class colorization_model(nn.Module):
     outputmodel = self.relu(self.outputmodel_conv5(outputmodel)) # None, 32, 112, 112
     outputmodel = self.sigmoid(self.outputmodel_conv6(outputmodel)) # None, 2, 112, 112
     outputmodel = self.outputmodel_upsample(outputmodel) # None, 2, 224, 224
-    return outputmodel, global_featureClass #返回 预测的AB 和 类向量
+    return outputmodel #返回 预测的AB 和 类向量
 
 class GAN(nn.Module):
   def __init__(self, netG, netD):
@@ -128,8 +123,8 @@ class GAN(nn.Module):
     # trainL用于拼接AB，trainL_3输入生成网络得到AB和类向量
     for param in self.netD.parameters(): #GAN的传播先将D设置成不需要BP
       param.requires_grad= False
-    predAB, classVector = self.netG(trainL_3) #通过G得到预测的AB值、类向量
+    predAB = self.netG(trainL_3) #通过G得到预测的AB值、类向量
     predLAB = torch.cat([trainL, predAB], dim=1) #LAB拼起来得到最终结果
     discpred = self.netD(predLAB) # 将最终结果输入到D中，得到辨别结果
-    return predAB, classVector, discpred #返回预测的AB值，类向量、D判别结果
+    return predAB, discpred #返回预测的AB值，类向量、D判别结果
 
