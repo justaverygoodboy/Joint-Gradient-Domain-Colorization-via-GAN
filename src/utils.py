@@ -62,7 +62,7 @@ def plot_some(test_data, colorization_model, device, epoch):
       batchL = torch.tensor(batchL).to(device).float()
       realAB = torch.tensor(realAB).to(device).float()
       colorization_model.eval()
-      batch_predAB, _ = colorization_model(batchL_3)
+      batch_predAB = colorization_model(batchL_3)
       batch_predAB = batch_predAB.cpu().numpy().reshape((128,128,2))
       batchL = batchL.cpu().numpy().reshape((128,128,1))
       realAB = realAB.cpu().numpy().reshape((128,128,2))
