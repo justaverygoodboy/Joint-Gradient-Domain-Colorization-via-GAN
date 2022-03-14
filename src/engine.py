@@ -64,7 +64,7 @@ def train(train_loader, GAN_Model, netD, VGG_MODEL, optG, optD, device, losses):
       losses['D_losses'].append(Loss_D.item())
       losses['EPOCH_D_losses'].append(Loss_D.item())
       # Output training stats
-      if batch % 100 == 0: #原本是100
+      if batch % 5 == 0: #原本是100
         print('Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f / %.8f | WGAN_F(G): %.8f | WGAN_F(D): %.8f | WGAN_R(D): %.8f | WGAN_A(D): %.8f'
             % (Loss_D.item(), Loss_G.item(), D_x, D_G_z1, D_G_z2,Loss_WL.item(), Loss_D_Fake.item(), Loss_D_Real.item(), Loss_D_avg.item()))
 
