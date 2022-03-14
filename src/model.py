@@ -1,3 +1,7 @@
+from turtle import forward
+from matplotlib.pyplot import cla
+from numpy import pad
+from sklearn.neighbors import KNeighborsTransformer
 import torch
 import torch.nn as nn
 import torchvision
@@ -24,6 +28,18 @@ class discriminator_model(nn.Module):
     net = self.leaky_relu(net)          #[-1, 512, 27, 27]
     net = self.conv5(net)               #[-1, 1, 26, 26]
     return net
+
+class ResGen(nn.Module):
+  def __init__(self):
+    super(ResGen,self).__init__()
+    self.pretrained_net = torchvision.models.resnet18(pretrained=True)
+    self.net = nn.Sequential(*list(self.pretrained_net.children())[:-3])
+    self.final_Conv = nn.Conv2d(256,2,kernel_size=1)
+    self.TransConv = nn.ConvTranspose2d(2,2,kernel_size=32,padding=8,stride=16)
+  def forward(self,input_img):
+    outputmodel = self.net(input_img)
+    outputmodel = self.final_Conv(outputmodel)
+    outputmodel = self.TransConv(outputmodel)
 
 # net G
 class colorization_model(nn.Module):
