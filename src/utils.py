@@ -29,8 +29,8 @@ def reconstruct(batchX, predictedY, filelist):
     return result
     
 def reconstruct_no(batchX, predictedY):
-    batchX = batchX.reshape(224,224,1) 
-    predictedY = predictedY.reshape(224,224,2)
+    batchX = batchX.reshape(128,128,1) 
+    predictedY = predictedY.reshape(128,128,2)
     result = np.concatenate((batchX, predictedY), axis=2)
     result = cv2.cvtColor(result, cv2.COLOR_Lab2RGB)
     return result
