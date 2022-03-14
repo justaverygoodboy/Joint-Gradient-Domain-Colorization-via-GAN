@@ -55,19 +55,19 @@ def plot_some(test_data, colorization_model, device, epoch):
     for idx in indexes:
       batchL, realAB, filename = test_data[idx]
       filepath = config.TRAIN_DIR+filename
-      batchL = batchL.reshape(1,1,224,224)
-      realAB = realAB.reshape(1,2,224,224)
+      batchL = batchL.reshape(1,1,128,128)
+      realAB = realAB.reshape(1,2,128,128)
       batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
       batchL_3 = batchL_3.to(device).float()
       batchL = torch.tensor(batchL).to(device).float()
       realAB = torch.tensor(realAB).to(device).float()
       colorization_model.eval()
       batch_predAB, _ = colorization_model(batchL_3)
-      batch_predAB = batch_predAB.cpu().numpy().reshape((224,224,2))
-      batchL = batchL.cpu().numpy().reshape((224,224,1))
-      realAB = realAB.cpu().numpy().reshape((224,224,2))
+      batch_predAB = batch_predAB.cpu().numpy().reshape((128,128,2))
+      batchL = batchL.cpu().numpy().reshape((128,128,1))
+      realAB = realAB.cpu().numpy().reshape((128,128,2))
       orig = cv2.imread(filepath)
-      orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (224,224))
+      orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (128,128))
       preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
       imag_gird(0, orig, batchL, preds, epoch-1,idx)
 

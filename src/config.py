@@ -15,7 +15,7 @@ os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # DATA INFORMATION
-IMAGE_SIZE = 224 #初始是224
+IMAGE_SIZE = 128 #初始是224
 BATCH_SIZE = 1
 GRADIENT_PENALTY_WEIGHT = 10
 NUM_EPOCHS = 500#初始是10
