@@ -43,14 +43,6 @@ class colorization_model(nn.Module):
     self.global_features_conv4 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 7, 7]
     self.global_features_bn4 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
 
-    self.global_features2_flatten = nn.Flatten()
-    self.global_features2_dense1 = nn.Linear(512*7*7,1024)
-    self.midlevel_conv1 = nn.Conv2d(512,512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 28, 28]
-    self.global_features2_dense2 = nn.Linear(1024,512)
-    self.midlevel_bn1 = nn.BatchNorm2d(512, eps=0.001,momentum=0.99)
-    self.global_features2_dense3 = nn.Linear(512,256)
-    self.midlevel_conv2 = nn.Conv2d(512,256, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
-    self.midlevel_bn2 = nn.BatchNorm2d(256,eps=0.001,momentum=0.99)
      #[None, 256, 28, 28]
     # self.midlevel_bn2 = nn.BatchNorm2d(256)#,,eps=0.001,momentum=0.99)
     self.global_featuresClass_flatten = nn.Flatten()
@@ -81,36 +73,22 @@ class colorization_model(nn.Module):
     global_features = self.global_features_bn2(global_features) #[None, 512, 14, 14]
     global_features = self.relu(self.global_features_conv3(global_features)) #[None, 512, 7, 7]
     global_features = self.global_features_bn3(global_features)  #[None, 512, 7, 7]
-    global_features = self.relu(self.global_features_conv4(global_features)) #[None, 512, 7, 7]
-    global_features = self.global_features_bn4(global_features) #[None, 512, 7, 7]
-    global_features2 = self.global_features2_flatten(global_features) #[None, 512*7*7]
-    global_features2 = self.global_features2_dense1(global_features2) #[None, 1024]
-    global_features2 = self.global_features2_dense2(global_features2) #[None, 512]
-    global_features2 = self.global_features2_dense3(global_features2) #[None, 256]
-    global_features2 = global_features2.unsqueeze(2).expand(-1,256,28*28) #[None, 256, 784] 这里是进行填充吗expand
-    global_features2 = global_features2.view((-1,256,28,28)) #[None, 256, 28, 28]
-    
-    # Mid Level Features 紫色部分
-    midlevel_features = self.midlevel_conv1(vgg_out) #[None, 512, 28, 28]
-    midlevel_features = self.midlevel_bn1(midlevel_features) #[None, 512, 28, 28]
-    midlevel_features = self.midlevel_conv2(midlevel_features) #[None, 256, 28, 28]
-    midlevel_features = self.midlevel_bn2(midlevel_features) #[None, 256, 28, 28]
 
-    # Fusion of (VGG16 + MidLevel) + (VGG16 + Global) 紫色 + 红色
-    modelFusion = torch.cat([midlevel_features, global_features2],dim=1)
 
     # Fusion Colorization 蓝色部分
-    outputmodel = self.relu(self.outputmodel_conv1(modelFusion)) # None, 256, 28, 28
+    outputmodel = self.relu(self.outputmodel_conv1(global_features)) # None, 256, 28, 28
+    outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
     outputmodel = self.relu(self.outputmodel_conv2(outputmodel)) # None, 128, 28, 28
     outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
     outputmodel = self.outputmodel_bn1(outputmodel) # None, 128, 56, 56
     outputmodel = self.relu(self.outputmodel_conv3(outputmodel)) # None, 64, 56, 56
+    outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
     outputmodel = self.relu(self.outputmodel_conv4(outputmodel)) # None, 64, 56, 56 
     outputmodel = self.outputmodel_upsample(outputmodel) # None, 64, 112, 112
     outputmodel = self.outputmodel_bn2(outputmodel) # None, 64, 112, 112
     outputmodel = self.relu(self.outputmodel_conv5(outputmodel)) # None, 32, 112, 112
+    outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
     outputmodel = self.sigmoid(self.outputmodel_conv6(outputmodel)) # None, 2, 112, 112
-    outputmodel = self.outputmodel_upsample(outputmodel) # None, 2, 224, 224
     return outputmodel #返回 预测的AB 和 类向量
 
 class GAN(nn.Module):
