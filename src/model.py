@@ -62,22 +62,20 @@ class SAResGenerator(nn.Module):
         layer1.append(nn.BatchNorm2d(1024))
         layer1.append(nn.ReLU())
         layer2.append(nn.ConvTranspose2d(1024, 512, 4, 2, 1)) #b,512,14,14
-        layer2.append(nn.BatchNorm2d(int(curr_dim / 2)))
+        layer2.append(nn.BatchNorm2d(512))
         layer2.append(nn.ReLU())
         layer3.append(nn.ConvTranspose2d(512, 256, 4, 2, 1)) #b,256,28,28
-        layer3.append(nn.BatchNorm2d(int(curr_dim / 2)))
+        layer3.append(nn.BatchNorm2d(256))
         layer3.append(nn.ReLU())
-        # if self.imsize == 64:
-        curr_dim = int(curr_dim / 2)
-        layer4.append(nn.ConvTranspose2d(curr_dim, int(curr_dim / 2), 4, 2, 1)) #b,128,56,56
-        layer4.append(nn.BatchNorm2d(int(curr_dim / 2)))
+        layer4.append(nn.ConvTranspose2d(256, 128, 4, 2, 1)) #b,128,56,56
+        layer4.append(nn.BatchNorm2d(128))
         layer4.append(nn.ReLU())
         layer5.append(nn.ConvTranspose2d(128,64,4,2,1)) #b,64,h,w
         layer5.append(nn.BatchNorm2d(64))
-        layer5.append(nn.ReLU)
+        layer5.append(nn.ReLU())
         layer6.append(nn.ConvTranspose2d(64,32,9)) #b,32,h,w
-        layer6.append(nn.BatchNorm2d(64))
-        layer6.append(nn.ReLU)
+        layer6.append(nn.BatchNorm2d(32))
+        layer6.append(nn.ReLU())
         self.l1 = nn.Sequential(*layer1)
         self.l2 = nn.Sequential(*layer2)
         self.l3 = nn.Sequential(*layer3)
@@ -90,9 +88,9 @@ class SAResGenerator(nn.Module):
         self.attn1 = Self_Attn( 128, 'relu') #这里应该改256
         self.attn2 = Self_Attn( 64,  'relu') #这里应该改128
 
-    def forward(self, z):
-        z = z.view(z.size(0), z.size(1), 1, 1)
-        out=self.ResNet(z)
+    def forward(self, img):
+        # z = z.view(z.size(0), z.size(1), 1, 1)
+        out=self.ResNet(img)
         out=self.l1(out)
         out=self.l2(out)
         out=self.l3(out)
@@ -102,8 +100,7 @@ class SAResGenerator(nn.Module):
         out,p2 = self.attn2(out)
         out=self.l6(out)
         out=self.last(out)
-        return out, p1, p2
-
+        return out
 
 # net D
 class discriminator_model(nn.Module):
@@ -129,78 +126,78 @@ class discriminator_model(nn.Module):
     return net
 
 # net G
-class colorization_model(nn.Module):
-  def __init__(self):
-    super(colorization_model, self).__init__()
-    self.VGG_model = torchvision.models.vgg16(pretrained=True)
-    self.VGG_model = nn.Sequential(*list(self.VGG_model.features.children())[:-8]) #[None, 512, 28, 28] 这个貌似是对模型进行修改，除去了顶层，#
-    self.VGG_model = self.VGG_model #double是指数据类型，从float变double
-    self.relu = nn.ReLU()
-    self.lrelu = nn.LeakyReLU(0.3)
-    self.global_features_conv1 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(2,2), bias=bias) #[None, 512, 14, 14]
-    self.global_features_bn1 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
-    self.global_features_conv2 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 14, 14]
-    self.global_features_bn2 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
-    self.global_features_conv3 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(2,2), bias=bias) #[None, 512, 7, 7]
-    self.global_features_bn3 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
-    self.global_features_conv4 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 7, 7]
-    self.global_features_bn4 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
+# class colorization_model(nn.Module):
+#   def __init__(self):
+#     super(colorization_model, self).__init__()
+#     self.VGG_model = torchvision.models.vgg16(pretrained=True)
+#     self.VGG_model = nn.Sequential(*list(self.VGG_model.features.children())[:-8]) #[None, 512, 28, 28] 这个貌似是对模型进行修改，除去了顶层，#
+#     self.VGG_model = self.VGG_model #double是指数据类型，从float变double
+#     self.relu = nn.ReLU()
+#     self.lrelu = nn.LeakyReLU(0.3)
+#     self.global_features_conv1 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(2,2), bias=bias) #[None, 512, 14, 14]
+#     self.global_features_bn1 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
+#     self.global_features_conv2 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 14, 14]
+#     self.global_features_bn2 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
+#     self.global_features_conv3 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(2,2), bias=bias) #[None, 512, 7, 7]
+#     self.global_features_bn3 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
+#     self.global_features_conv4 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 7, 7]
+#     self.global_features_bn4 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
 
-    self.global_features2_flatten = nn.Flatten()
-    self.global_features2_dense1 = nn.Linear(512*7*7,1024)
-    self.midlevel_conv1 = nn.Conv2d(512,512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 28, 28]
-    self.global_features2_dense2 = nn.Linear(1024,512)
-    self.midlevel_bn1 = nn.BatchNorm2d(512, eps=0.001,momentum=0.99)
-    self.global_features2_dense3 = nn.Linear(512,256)
-    self.midlevel_conv2 = nn.Conv2d(512,256, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
-    self.midlevel_bn2 = nn.BatchNorm2d(256,eps=0.001,momentum=0.99)
-     #[None, 256, 28, 28]
-    # self.midlevel_bn2 = nn.BatchNorm2d(256)#,,eps=0.001,momentum=0.99)
-    self.global_featuresClass_flatten = nn.Flatten()
-    self.global_featuresClass_dense1 = nn.Linear(512*7*7, 4096)
-    self.global_featuresClass_dense2 = nn.Linear(4096, 4096)
-    self.global_featuresClass_dense3 = nn.Linear(4096, 1000)
-    self.softmax = nn.Softmax()
+#     self.global_features2_flatten = nn.Flatten()
+#     self.global_features2_dense1 = nn.Linear(512*7*7,1024)
+#     self.midlevel_conv1 = nn.Conv2d(512,512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 28, 28]
+#     self.global_features2_dense2 = nn.Linear(1024,512)
+#     self.midlevel_bn1 = nn.BatchNorm2d(512, eps=0.001,momentum=0.99)
+#     self.global_features2_dense3 = nn.Linear(512,256)
+#     self.midlevel_conv2 = nn.Conv2d(512,256, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
+#     self.midlevel_bn2 = nn.BatchNorm2d(256,eps=0.001,momentum=0.99)
+#      #[None, 256, 28, 28]
+#     # self.midlevel_bn2 = nn.BatchNorm2d(256)#,,eps=0.001,momentum=0.99)
+#     self.global_featuresClass_flatten = nn.Flatten()
+#     self.global_featuresClass_dense1 = nn.Linear(512*7*7, 4096)
+#     self.global_featuresClass_dense2 = nn.Linear(4096, 4096)
+#     self.global_featuresClass_dense3 = nn.Linear(4096, 1000)
+#     self.softmax = nn.Softmax()
 
-    self.outputmodel_conv1 = nn.Conv2d(512, 256, kernel_size=(1,1), padding=0, stride=(1,1),  bias=bias) 
-    self.outputmodel_conv2 = nn.Conv2d(256, 128, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
-    self.outputmodel_conv3 = nn.Conv2d(128, 64, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
-    self.outputmodel_conv4 = nn.Conv2d(64, 64, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
-    self.outputmodel_conv5 = nn.Conv2d(64, 32, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
-    self.outputmodel_conv6 = nn.Conv2d(32, 2, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
-    self.outputmodel_upsample = nn.Upsample(scale_factor=(2,2))
-    self.outputmodel_bn1 = nn.BatchNorm2d(128)
-    self.outputmodel_bn2 = nn.BatchNorm2d(64)
-    self.sigmoid = nn.Sigmoid()
-    self.tanh = nn.Tanh()
+#     self.outputmodel_conv1 = nn.Conv2d(512, 256, kernel_size=(1,1), padding=0, stride=(1,1),  bias=bias) 
+#     self.outputmodel_conv2 = nn.Conv2d(256, 128, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
+#     self.outputmodel_conv3 = nn.Conv2d(128, 64, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
+#     self.outputmodel_conv4 = nn.Conv2d(64, 64, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
+#     self.outputmodel_conv5 = nn.Conv2d(64, 32, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
+#     self.outputmodel_conv6 = nn.Conv2d(32, 2, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
+#     self.outputmodel_upsample = nn.Upsample(scale_factor=(2,2))
+#     self.outputmodel_bn1 = nn.BatchNorm2d(128)
+#     self.outputmodel_bn2 = nn.BatchNorm2d(64)
+#     self.sigmoid = nn.Sigmoid()
+#     self.tanh = nn.Tanh()
 
-  def forward(self,input_img):
-    # VGG Without Top Layers 黄色部分
-    vgg_out = self.VGG_model(torch.tensor(input_img))
-    #Global Features 红色部分
-    global_features = self.relu(self.global_features_conv1(vgg_out))  #[None, 512, 14, 14]
-    global_features = self.global_features_bn1(global_features) #[None, 512, 14, 14]
-    global_features = self.relu(self.global_features_conv2(global_features)) #[None, 512, 14, 14]
-    global_features = self.global_features_bn2(global_features) #[None, 512, 14, 14]
-    global_features = self.relu(self.global_features_conv3(global_features)) #[None, 512, 7, 7]
-    global_features = self.global_features_bn3(global_features)  #[None, 512, 7, 7]
+  # def forward(self,input_img):
+  #   # VGG Without Top Layers 黄色部分
+  #   vgg_out = self.VGG_model(torch.tensor(input_img))
+  #   #Global Features 红色部分
+  #   global_features = self.relu(self.global_features_conv1(vgg_out))  #[None, 512, 14, 14]
+  #   global_features = self.global_features_bn1(global_features) #[None, 512, 14, 14]
+  #   global_features = self.relu(self.global_features_conv2(global_features)) #[None, 512, 14, 14]
+  #   global_features = self.global_features_bn2(global_features) #[None, 512, 14, 14]
+  #   global_features = self.relu(self.global_features_conv3(global_features)) #[None, 512, 7, 7]
+  #   global_features = self.global_features_bn3(global_features)  #[None, 512, 7, 7]
 
 
-    # Fusion Colorization 蓝色部分
-    outputmodel = self.relu(self.outputmodel_conv1(global_features)) # None, 256, 28, 28
-    outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
-    outputmodel = self.relu(self.outputmodel_conv2(outputmodel)) # None, 128, 28, 28
-    outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
-    outputmodel = self.outputmodel_bn1(outputmodel) # None, 128, 56, 56
-    outputmodel = self.relu(self.outputmodel_conv3(outputmodel)) # None, 64, 56, 56
-    outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
-    outputmodel = self.relu(self.outputmodel_conv4(outputmodel)) # None, 64, 56, 56 
-    outputmodel = self.outputmodel_upsample(outputmodel) # None, 64, 112, 112
-    outputmodel = self.outputmodel_bn2(outputmodel) # None, 64, 112, 112
-    outputmodel = self.relu(self.outputmodel_conv5(outputmodel)) # None, 32, 112, 112
-    outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
-    outputmodel = self.sigmoid(self.outputmodel_conv6(outputmodel)) # None, 2, 112, 112
-    return outputmodel #返回 预测的AB 和 类向量
+  #   # Fusion Colorization 蓝色部分
+  #   outputmodel = self.relu(self.outputmodel_conv1(global_features)) # None, 256, 28, 28
+  #   outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
+  #   outputmodel = self.relu(self.outputmodel_conv2(outputmodel)) # None, 128, 28, 28
+  #   outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
+  #   outputmodel = self.outputmodel_bn1(outputmodel) # None, 128, 56, 56
+  #   outputmodel = self.relu(self.outputmodel_conv3(outputmodel)) # None, 64, 56, 56
+  #   outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
+  #   outputmodel = self.relu(self.outputmodel_conv4(outputmodel)) # None, 64, 56, 56 
+  #   outputmodel = self.outputmodel_upsample(outputmodel) # None, 64, 112, 112
+  #   outputmodel = self.outputmodel_bn2(outputmodel) # None, 64, 112, 112
+  #   outputmodel = self.relu(self.outputmodel_conv5(outputmodel)) # None, 32, 112, 112
+  #   outputmodel = self.outputmodel_upsample(outputmodel) # None, 128, 56, 56
+  #   outputmodel = self.sigmoid(self.outputmodel_conv6(outputmodel)) # None, 2, 112, 112
+  #   return outputmodel #返回 预测的AB 和 类向量
 
 class GAN(nn.Module):
   def __init__(self, netG, netD):

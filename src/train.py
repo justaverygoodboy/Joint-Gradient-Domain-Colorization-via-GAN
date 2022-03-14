@@ -27,7 +27,7 @@ def map_fn(index=None, flags=None):
   DEVICE = config.DEVICE
   ######### 定义模型 #################
   ## GAN网络
-  netG = model.ResGen().float()
+  netG = model.SAResGenerator().float()
   netD = model.discriminator_model().float()
 
   ## 这个VGG是用一个在ImageNet上预训练的网络来训练分类网络的 作为监督信号
