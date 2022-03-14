@@ -43,6 +43,14 @@ class colorization_model(nn.Module):
     self.global_features_conv4 = nn.Conv2d(512, 512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 7, 7]
     self.global_features_bn4 = nn.BatchNorm2d(512,eps=0.001,momentum=0.99)
 
+    self.global_features2_flatten = nn.Flatten()
+    self.global_features2_dense1 = nn.Linear(512*7*7,1024)
+    self.midlevel_conv1 = nn.Conv2d(512,512, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias) #[None, 512, 28, 28]
+    self.global_features2_dense2 = nn.Linear(1024,512)
+    self.midlevel_bn1 = nn.BatchNorm2d(512, eps=0.001,momentum=0.99)
+    self.global_features2_dense3 = nn.Linear(512,256)
+    self.midlevel_conv2 = nn.Conv2d(512,256, kernel_size=(3,3), padding=1, stride=(1,1), bias=bias)
+    self.midlevel_bn2 = nn.BatchNorm2d(256,eps=0.001,momentum=0.99)
      #[None, 256, 28, 28]
     # self.midlevel_bn2 = nn.BatchNorm2d(256)#,,eps=0.001,momentum=0.99)
     self.global_featuresClass_flatten = nn.Flatten()
