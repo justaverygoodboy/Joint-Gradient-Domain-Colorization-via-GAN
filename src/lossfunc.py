@@ -50,8 +50,7 @@ class PerceptualLoss(nn.Module):
         super(PerceptualLoss,self).__init__()
         self.vgg = Vgg19_out().to(device)
         self.criterion = nn.MSELoss()
-        self.weights = [1.0,1.0,1.0,1.0,1.0]
-        self.downsample = nn.AvgPool2d(2,2,count_include_pad=False)
+
     def forward(self,x,y):
         x_vgg,y_vgg = self.vgg(x),self.vgg(y)
         loss = 0.0

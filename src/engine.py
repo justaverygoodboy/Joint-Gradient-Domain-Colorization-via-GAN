@@ -39,7 +39,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       Loss_MSE = nn.MSELoss()(predAB.float(), trainAB.float()) #MSE是预测的AB和真实AB的L2
       Loss_Percp = PerceptualLoss()(predLAB.float(),realLAB.float())
       #############
-      Loss_G = Loss_WL*0.1+Loss_MSE+Loss_Percp*0.1#总loss
+      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.05 #总loss
       Loss_G.backward()
       optG.step() # 使用生成网络的优化器优化
       losses['G_losses'].append(Loss_G.item())
@@ -57,7 +57,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       averaged_samples = (weights * trainAB ) + ((1 - weights) * predAB.detach())
       averaged_samples = torch.autograd.Variable(averaged_samples, requires_grad=True)
       avg_img = torch.cat([trainL, averaged_samples], dim=1)
-      discavg = netD(avg_img) #带噪声的结果》？
+      discavg = netD(avg_img) 
       Loss_D_Fake = wgan_loss(discpred, False)
       Loss_D_Real = wgan_loss(discreal, True)
       Loss_D_avg = gp_loss(discavg, averaged_samples, config.GRADIENT_PENALTY_WEIGHT)
