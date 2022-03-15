@@ -53,21 +53,20 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       for param in netD.parameters(): # 将D的设置为可BP
         param.requires_grad = True
       optD.zero_grad()
-      # 这个貌似没作用
-      # discpred = netD(predLAB.detach()) #预测图像辨别结果
-      # D_G_z2 = discpred.mean().item() #均值
-      discreal = netD(realLAB) 
-      D_x = discreal.mean().item() #真实图像辨别结果
+      discpred = netD(predLAB.detach()) #预测图像辨别结果
+      D_G_z2 = discpred.mean().item() #均值
+      discreal = netD(realLAB) #真实图像辨别结果
+      D_x = discreal.mean().item() #均值
       weights = torch.randn((trainAB.size(0),1,1,1), device=device)          
       averaged_samples = (weights * trainAB ) + ((1 - weights) * predAB.detach())
       averaged_samples = torch.autograd.Variable(averaged_samples, requires_grad=True)
       avg_img = torch.cat([trainL, averaged_samples], dim=1)
-      discavg = netD(avg_img) 
+      discavg = netD(avg_img) #带噪声的结果》？
       Loss_D_Fake = wgan_loss(discpred, False)
       Loss_D_Real = wgan_loss(discreal, True)
       Loss_D_avg = gp_loss(discavg, averaged_samples, config.GRADIENT_PENALTY_WEIGHT)
       Loss_D = Loss_D_Fake + Loss_D_Real + Loss_D_avg
-      Loss_D.backward(retain_graph=True) #这里要加这个？
+      Loss_D.backward()
       optD.step()
       losses['D_losses'].append(Loss_D.item())
       losses['EPOCH_D_losses'].append(Loss_D.item())
