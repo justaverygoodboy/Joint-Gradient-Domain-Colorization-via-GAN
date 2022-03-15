@@ -83,7 +83,7 @@ class SAResGenerator(nn.Module):
         self.l5 = nn.Sequential(*layer5)
         self.l6 = nn.Sequential(*layer6)
         last.append(nn.ConvTranspose2d(32, 2, 9)) #32,2,128,128
-        last.append(nn.Sigmoid()) #这里不应该用Tanh，应该用Sigmoid吧，我的值域是0，1
+        last.append(nn.Sigmoid())
         self.last = nn.Sequential(*last)
         self.attn1 = Self_Attn( 128, 'relu') #这里应该改256
         self.attn2 = Self_Attn( 64,  'relu') #这里应该改128
