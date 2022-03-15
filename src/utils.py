@@ -49,6 +49,15 @@ def imag_gird(axrow, orig, batchL, preds, epoch,idx):
   plt.savefig(f'../result/sample_preds_{epoch}_{idx}')
   plt.close()
 
+def show_test_img(L,AB,idx):
+  AB = AB.cpu().numpy().reshape((128,128,2))
+  L = L.cpu().numpy().reshape((128,128,1))
+  img = reconstruct_no(preprocess(L), preprocess(AB))
+  plt.figure("Test Image")
+  plt.imshow(img)
+  plt.title("Test Image")
+  plt.savefig(f'test_{idx}')
+
 def plot_some(test_data, colorization_model, device, epoch):
   with torch.no_grad():
     indexes = [0, 2, 9]

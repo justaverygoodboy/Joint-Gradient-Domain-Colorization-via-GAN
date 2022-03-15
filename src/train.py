@@ -12,7 +12,7 @@ import gc
 
 def map_fn(index=None, flags=None):
   torch.set_default_tensor_type('torch.FloatTensor') #这里加了.cuda
-  torch.manual_seed(1234)
+  torch.manual_seed(1) #1234
   ######## 读取数据 ############
   train_data = dataset.DATA(config.TRAIN_DIR) 
   train_sampler = torch.utils.data.RandomSampler(train_data) # 这里应该是随机打乱数据
@@ -34,8 +34,8 @@ def map_fn(index=None, flags=None):
   netG = netG.to(DEVICE)
   netD = netD.to(DEVICE)
   ## 设置优化器参数
-  optD = torch.optim.Adam(netD.parameters(), lr=4e-4, betas=(0.5, 0.999)) #论文里这里是2e-5
-  optG = torch.optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.999))
+  optD = torch.optim.Adam(netD.parameters(), lr=4e-5, betas=(0.5, 0.999)) #论文里这里是2e-5
+  optG = torch.optim.Adam(netG.parameters(), lr=2e-5, betas=(0.5, 0.999))
   ## Trains
   losses = {
       'G_losses' : [],

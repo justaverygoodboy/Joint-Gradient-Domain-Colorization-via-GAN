@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from torch import nn
 from lossfunc import PerceptualLoss
+import utils
 
 def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   batch = 0
@@ -24,7 +25,11 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   ## 迭代读取数据，直接分离了L和AB通道
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
-      trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里要不要把ab通道改成噪音
+      ########### add noise #################
+      z = torch.rand(trainL.size(0),2,128,128)
+      # trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里要不要把ab通道改成噪音
+      trainL_3 = torch.cat([trainL,z],dim=1) # add noise to grayscale image for training
+      realLAB = torch.cat([trainL, trainAB], dim=1)
       trainL = torch.tensor(trainL, device=device).float()
       trainAB = torch.tensor(trainAB, device=device).float()
       ############ GAN MODEL ( Training Generator) ###################
@@ -39,7 +44,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       Loss_MSE = nn.MSELoss()(predAB.float(), trainAB.float()) #MSE是预测的AB和真实AB的L2
       Loss_Percp = PerceptualLoss()(predLAB.float(),realLAB.float())
       #############
-      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.05 #总loss
+      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 #总loss
       Loss_G.backward()
       optG.step() # 使用生成网络的优化器优化
       losses['G_losses'].append(Loss_G.item())

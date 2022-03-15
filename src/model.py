@@ -47,7 +47,6 @@ class SAResGenerator(nn.Module):
     """Generator."""
     def __init__(self):
         super(SAResGenerator, self).__init__()
-
         # 加个resnet152做主干
         self.ResNet = torchvision.models.resnet152(pretrained=True)
         self.ResNet = nn.Sequential(*list(self.ResNet.children())[:-2]) # b,2048,4,4
