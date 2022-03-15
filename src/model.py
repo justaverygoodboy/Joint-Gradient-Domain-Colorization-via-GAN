@@ -106,24 +106,28 @@ class SAResGenerator(nn.Module):
 class discriminator_model(nn.Module):
   def __init__(self):
     super(discriminator_model, self).__init__()
-    self.conv1 = nn.Conv2d(3, 64, kernel_size=(4,4),padding=1,stride=(2,2),bias=bias) # 64, 112, 112
-    self.conv2 = nn.Conv2d(64, 128, kernel_size=(4,4), padding=1, stride=(2,2), bias=bias) # 128, 56, 56
-    self.conv3 = nn.Conv2d(128,256, kernel_size=(4,4), padding=1, stride=(2,2), bias=bias) # 256, 28, 28, 2
-    self.conv4 = nn.Conv2d(256,512, kernel_size=(4,4), padding=3, stride=(1,1), bias=bias) # 512, 28, 28
-    self.conv5 = nn.Conv2d(512,1, kernel_size=(4,4), padding=3, stride=(1,1), bias=bias) # 1, 
-    self.leaky_relu = nn.LeakyReLU(0.3)
+    self.conv1 = nn.Conv2d(3, 64, 4, 2, 1) # 64, 112, 112
+    self.conv2 = nn.Conv2d(64, 128, 4, 2, 1) # 128, 56, 56
+    self.conv3 = nn.Conv2d(128, 256, 4, 2, 1) # 256, 28, 28, 2
+    self.conv4 = nn.Conv2d(256, 512, 4, 2, 1) # 512, 28, 28
+    self.conv5 = nn.Conv2d(512, 1, 4) # 1,5,5 
+    self.leaky_relu = nn.LeakyReLU(0.1)
+    self.attn1 = Self_Attn(256,'relu')
+    self.attn2 = Self_Attn(512,'relu')
 
   def forward(self,input):
-    net = self.conv1(input)               #[-1, 64, 112, 112]
-    net = self.leaky_relu(net)          #[-1, 64, 112, 112]    
-    net = self.conv2(net)               #[-1, 128, 56, 56] 
-    net = self.leaky_relu(net)          #[-1, 128, 56, 56] 
-    net = self.conv3(net)               #[-1, 256, 28, 28]
-    net = self.leaky_relu(net)          #[-1, 256, 28, 28]   
-    net = self.conv4(net)               #[-1, 512, 27, 27]
-    net = self.leaky_relu(net)          #[-1, 512, 27, 27]
-    net = self.conv5(net)               #[-1, 1, 26, 26]
-    return net
+    net = self.conv1(input)              
+    net = self.leaky_relu(net)         
+    net = self.conv2(net)              
+    net = self.leaky_relu(net)         
+    net = self.conv3(net)              
+    net = self.leaky_relu(net)          
+    net,p1 = self.attn1(net)
+    net = self.conv4(net)              
+    net = self.leaky_relu(net)
+    net,p2 = self.attn2(net)          
+    net = self.conv5(net)               
+    return net.squeeze()
 
 
 class GAN(nn.Module):
