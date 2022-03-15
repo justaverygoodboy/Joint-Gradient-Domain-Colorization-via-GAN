@@ -1,54 +1,65 @@
+from turtle import forward
+from xml.parsers.expat import model
 import torch
 import numpy as np
 from torch import nn
 from torch.autograd import Variable
 import torch.nn.functional as F
+from math import exp
+from torchvision import models
 
-def Edge_x(im): #输入的是四维tensor(batch,channel,height,width)
-    conv_op = nn.Conv2d(1,1,3,bias=False)
-    sobel_kernel = np.array([[-1,0,1],[-2,0,2],[-1,0,1]],dtype=np.float32)
-    sobel_kernel = sobel_kernel.reshape((1,1,3,3))
-    conv_op.weight.data = torch.from_numpy(sobel_kernel)
-    edge_x = conv_op(Variable(im))
-    edge_x = edge_x.squeeze()
-    return edge_x
-def Edge_y(im):
-    conv_op = nn.Conv2d(1,1,3,bias=False)
-    sobel_kernel = np.array([[1,2,1],[0,0,0],[-1,-2,-1]],dtype=np.float32)
-    sobel_kernel = sobel_kernel.reshape((1,1,3,3))
-    conv_op.weight.data = torch.from_numpy(sobel_kernel)
-    edge_y = conv_op(Variable(im))
-    edge_y = edge_y.squeeze()
-    return edge_y
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-## 这里要注意是不是要把图像转成RGB的再求loss，因为如果按灰度来的话他们梯度应该是一样的，应该要使用结合颜色信息的RGB
-# 导入GradientLoss然后传入两个值即可，这两个值就是图片再nn中的四维向量
-## 这个是一阶梯度，sobel算子
-class GradientLoss_S(nn.Module):
+class Vgg19_out(nn.Module):
     def __init__(self):
-        super(GradientLoss_S, self).__init__()
-        sobel_x = torch.Tensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]])
-        sobel_y = torch.Tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
-        sobel_3x = torch.Tensor(1, 3, 3, 3)
-        sobel_3y = torch.Tensor(1, 3, 3, 3)
-        sobel_3x[:, 0:3, :, :] = sobel_x
-        sobel_3y[:, 0:3, :, :] = sobel_y
-        self.conv_hx = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, bias=False)
-        self.conv_hy = nn.Conv2d(3, 3, kernel_size=3, stride=1, padding=1, bias=False)
-        self.conv_hx.weight = torch.nn.Parameter(sobel_3x)
-        self.conv_hy.weight = torch.nn.Parameter(sobel_3y)
-    def forward(self, X, Y):
-        X_hx = self.conv_hx(X)
-        X_hy = self.conv_hy(Y)
-        G_X = torch.abs(X_hx) + torch.abs(X_hy)
-        # compute gradient of Y
-        Y_hx = self.conv_hx(Y)
-        self.conv_hx.train(False)
-        Y_hy = self.conv_hy(Y)
-        self.conv_hy.train(False)
-        G_Y = torch.abs(Y_hx) + torch.abs(Y_hy)
-        loss = F.mse_loss(G_X, G_Y, size_average=True)
+        super(Vgg19_out,self).__init__()
+        vgg = models.vgg19(pretrained=True).to(device)
+        vgg.eval()
+        vgg_pretrained_features = vgg.features
+        self.requires_grad = False
+        self.slice1 = torch.nn.Sequential()
+        self.slice2 = torch.nn.Sequential()
+        self.slice3 = torch.nn.Sequential()
+        self.slice4 = torch.nn.Sequential()
+        self.slice5 = torch.nn.Sequential()
+        for x in range(4):
+            self.slice1.add_module(str(x),vgg_pretrained_features[x])
+        for x in range(4, 9): #(3, 7):
+            self.slice2.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(9, 14): #(7, 12):
+            self.slice3.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(14, 23): #(12, 21):
+            self.slice4.add_module(str(x), vgg_pretrained_features[x])
+        for x in range(23, 32):#(21, 30):
+            self.slice5.add_module(str(x), vgg_pretrained_features[x])
+        if not self.requires_grad:
+            for param in self.parameters():
+                param.requires_grad = False
+    
+    def forward(self, X):
+        h_relu1 = self.slice1(X)
+        h_relu2 = self.slice2(h_relu1)
+        h_relu3 = self.slice3(h_relu2)
+        h_relu4 = self.slice4(h_relu3)
+        h_relu5 = self.slice5(h_relu4)
+        out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
+        return out
+
+class PerceptualLoss(nn.Module):
+    def __init__(self):
+        super(PerceptualLoss,self).__init__()
+        self.vgg = Vgg19_out().to(device)
+        self.criterion = nn.MSELoss()
+        self.weights = [1.0,1.0,1.0,1.0,1.0]
+        self.downsample = nn.AvgPool2d(2,2,count_include_pad=False)
+    def forward(self,x,y):
+        x_vgg,y_vgg = self.vgg(x),self.vgg(y)
+        loss = 0.0
+        for iter,(x_fea,y_fea) in enumerate(zip(x_vgg,y_vgg)):
+            print(iter+1,self.criterion(x_fea,y_fea.detach()),x_fea.size())
+            loss += self.criterion(x_fea,y_fea.detach())
         return loss
+
 
    
     

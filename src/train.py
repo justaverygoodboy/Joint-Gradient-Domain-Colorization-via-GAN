@@ -30,16 +30,12 @@ def map_fn(index=None, flags=None):
   netG = model.SAResGenerator().float()
   netD = model.discriminator_model().float()
 
-  ## 这个VGG是用一个在ImageNet上预训练的网络来训练分类网络的 作为监督信号
-  VGG_modelF = torchvision.models.vgg16(pretrained=True)
-  VGG_modelF.requires_grad_(False)
   ######################################
   netG = netG.to(DEVICE)
   netD = netD.to(DEVICE)
-  VGG_modelF = VGG_modelF.to(DEVICE).float()
   ## 设置优化器参数
-  optD = torch.optim.Adam(netD.parameters(), lr=2e-5, betas=(0.5, 0.999)) #论文里这里是2e-5
-  optG = torch.optim.Adam(netG.parameters(), lr=2e-5, betas=(0.5, 0.999))
+  optD = torch.optim.Adam(netD.parameters(), lr=4e-4, betas=(0.5, 0.999)) #论文里这里是2e-5
+  optG = torch.optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.999))
   ## Trains
   losses = {
       'G_losses' : [],
@@ -58,7 +54,7 @@ def map_fn(index=None, flags=None):
     print('#'*8,f'EPOCH-{epoch}','#'*8)
     losses['EPOCH_G_losses'] = []
     losses['EPOCH_D_losses'] = []
-    engine.train(train_loader, netGAN, netD, VGG_modelF, optG, optD, device=DEVICE, losses=losses)
+    engine.train(train_loader, netGAN, netD, optG, optD, device=DEVICE, losses=losses)
     utils.create_checkpoint(epoch, netG, optG, netD, optD, max_checkpoint=config.KEEP_CKPT, save_path = config.CHECKPOINT_DIR)
     utils.plot_some(train_data, netG, DEVICE, epoch)
     gc.collect() #这个貌似是垃圾回收
