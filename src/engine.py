@@ -26,12 +26,11 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
       ########### add noise #################
-      z = torch.rand(trainL.size(0),2,128,128)
+      z = torch.rand((trainL.size(0),2,128,128),device=device)
       # trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里要不要把ab通道改成噪音
-      trainL_3 = torch.cat([trainL,z],dim=1) # add noise to grayscale image for training
-      realLAB = torch.cat([trainL, trainAB], dim=1)
       trainL = torch.tensor(trainL, device=device).float()
       trainAB = torch.tensor(trainAB, device=device).float()
+      trainL_3 = torch.cat([trainL,z],dim=1) # add noise to grayscale image for training
       ############ GAN MODEL ( Training Generator) ###################
       optG.zero_grad()
       predAB, discpred = GAN_Model(trainL, trainL_3) #得到预测的AB、类向量、D辨别结果
