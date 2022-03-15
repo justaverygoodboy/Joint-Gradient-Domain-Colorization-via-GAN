@@ -67,7 +67,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       Loss_D_Real = wgan_loss(discreal, True)
       Loss_D_avg = gp_loss(discavg, averaged_samples, config.GRADIENT_PENALTY_WEIGHT)
       Loss_D = Loss_D_Fake + Loss_D_Real + Loss_D_avg
-      Loss_D.backward()
+      Loss_D.backward(retain_graph=True) #这里要加这个？
       optD.step()
       losses['D_losses'].append(Loss_D.item())
       losses['EPOCH_D_losses'].append(Loss_D.item())
