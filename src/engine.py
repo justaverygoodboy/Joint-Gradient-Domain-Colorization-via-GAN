@@ -30,7 +30,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       ############ GAN MODEL ( Training Generator) ###################
       optG.zero_grad()
       predAB, discpred = GAN_Model(trainL, trainL_3) #得到预测的AB、类向量、D辨别结果
-      D_G_z1 = discpred.mean().item() # 获取辨别结果的平均值
+      D_G_z1 = discpred.mean().item() # GAN生成后进入D的判别结果
       ############ 先获得真实的图像和生成的图像 #############
       realLAB = torch.cat([trainL, trainAB], dim=1) #真实的图像
       predLAB = torch.cat([trainL, predAB], dim=1) #生成器得到的：预测的图像
@@ -49,10 +49,11 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       for param in netD.parameters(): # 将D的设置为可BP
         param.requires_grad = True
       optD.zero_grad()
-      discpred = netD(predLAB.detach()) #预测图像辨别结果
-      D_G_z2 = discpred.mean().item() #均值
-      discreal = netD(realLAB) #真实图像辨别结果
-      D_x = discreal.mean().item() #均值
+      # 这个貌似没作用
+      # discpred = netD(predLAB.detach()) #预测图像辨别结果
+      # D_G_z2 = discpred.mean().item() #均值
+      discreal = netD(realLAB) 
+      D_x = discreal.mean().item() #真实图像辨别结果
       weights = torch.randn((trainAB.size(0),1,1,1), device=device)          
       averaged_samples = (weights * trainAB ) + ((1 - weights) * predAB.detach())
       averaged_samples = torch.autograd.Variable(averaged_samples, requires_grad=True)
@@ -68,7 +69,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       losses['EPOCH_D_losses'].append(Loss_D.item())
       # Output training stats
       if batch % 5 == 0: #原本是100
-        print('Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f / %.8f | WGAN_F(G): %.8f | WGAN_F(D): %.8f | WGAN_R(D): %.8f | WGAN_A(D): %.8f | MSE: %.8f | Percp: %.8f'
-            % (Loss_D.item(), Loss_G.item(), D_x, D_G_z1, D_G_z2,Loss_WL.item(), Loss_D_Fake.item(), Loss_D_Real.item(), Loss_D_avg.item(), Loss_MSE.item(),Loss_Percp.item()))
+        print('Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f | WGAN_F(G): %.8f | WGAN_F(D): %.8f | WGAN_R(D): %.8f | WGAN_A(D): %.8f | MSE: %.8f | Percp: %.8f'
+            % (Loss_D.item(), Loss_G.item(), D_x, D_G_z1, Loss_WL.item(), Loss_D_Fake.item(), Loss_D_Real.item(), Loss_D_avg.item(), Loss_MSE.item(),Loss_Percp.item()))
 
       
