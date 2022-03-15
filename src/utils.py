@@ -124,4 +124,4 @@ def plot_gan_loss(G_losses, D_losses,epoch):
   plt.xlabel("iterations")
   plt.ylabel("Loss")
   plt.legend()
-  plt.savefig(f'GANLOSS{epoch}.pdf',figsize=(30,30))
+  plt.savefig(f'GANLOSS{epoch}.png',figsize=(15,10))

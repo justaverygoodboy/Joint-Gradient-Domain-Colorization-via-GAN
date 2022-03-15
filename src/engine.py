@@ -24,7 +24,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   ## 迭代读取数据，直接分离了L和AB通道
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
-      trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里是吧L通道复制成了(L,L,L)吧
+      trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里要不要把ab通道改成噪音
       trainL = torch.tensor(trainL, device=device).float()
       trainAB = torch.tensor(trainAB, device=device).float()
       ############ GAN MODEL ( Training Generator) ###################
