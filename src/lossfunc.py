@@ -56,7 +56,6 @@ class PerceptualLoss(nn.Module):
         x_vgg,y_vgg = self.vgg(x),self.vgg(y)
         loss = 0.0
         for iter,(x_fea,y_fea) in enumerate(zip(x_vgg,y_vgg)):
-            print(iter+1,self.criterion(x_fea,y_fea.detach()),x_fea.size())
             loss += self.criterion(x_fea,y_fea.detach())
         return loss
 
