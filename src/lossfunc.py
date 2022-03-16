@@ -58,6 +58,31 @@ class PerceptualLoss(nn.Module):
             loss += self.criterion(x_fea,y_fea.detach())
         return loss
 
+class Gradient_Net(nn.Module):
+  def __init__(self):
+    super(Gradient_Net, self).__init__()
+    kernel_x = [[-1., 0., 1.], [-2., 0., 2.], [-1., 0., 1.]]
+    kernel_x = torch.FloatTensor(kernel_x).unsqueeze(0).unsqueeze(0).to(device)
+
+    kernel_y = [[-1., -2., -1.], [0., 0., 0.], [1., 2., 1.]]
+    kernel_y = torch.FloatTensor(kernel_y).unsqueeze(0).unsqueeze(0).to(device)
+
+    self.weight_x = nn.Parameter(data=kernel_x, requires_grad=False)
+    self.weight_y = nn.Parameter(data=kernel_y, requires_grad=False)
+
+  def forward(self, x):
+    grad_x = F.conv2d(x, self.weight_x)
+    grad_y = F.conv2d(x, self.weight_y)
+    gradient = torch.abs(grad_x) + torch.abs(grad_y)
+    return gradient
+
+def GradientLoss(x,y):
+    gradient_model = Gradient_Net().to(device)
+    gx = gradient_model(x),gy = gradient_model(y)
+    criterion = nn.MSELoss()
+    loss = criterion(gx,gy)
+    return loss
+
 
    
     
