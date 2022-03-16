@@ -221,10 +221,10 @@ class UNet_3Plus(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 init_weights(m, init_type='kaiming')
 
-        self.attn1 = Self_Attn( 64, 'relu') #这里应该改256
-        self.attn2 = Self_Attn( 64,  'relu') #这里应该改128
-        self.attn3 = Self_Attn( 64, 'relu') #这里应该改256
-        self.attn4 = Self_Attn( 64,  'relu') #这里应该改128
+        self.attn1 = Self_Attn( 320, 'relu') #这里应该改256
+        self.attn2 = Self_Attn( 320,  'relu') #这里应该改128
+        self.attn3 = Self_Attn( 320, 'relu') #这里应该改256
+        self.attn4 = Self_Attn( 320,  'relu') #这里应该改128
         self.attn5 = Self_Attn( 1024, 'relu') #这里应该改256
 
     def forward(self, inputs):
