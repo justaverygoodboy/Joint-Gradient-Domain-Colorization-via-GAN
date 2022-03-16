@@ -5,6 +5,7 @@ import config
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
+import torchvision.transforms as transforms
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 def preprocess(imgs):
   try:
@@ -84,16 +85,17 @@ def plot_some_AE(test_data, net, device, epoch):
   with torch.no_grad():
     indexes = [0, 2, 9]
     for idx in indexes:
+      transf = transforms.ToTensor()
       batchL, realAB, filename = test_data[idx]
       filepath = config.TRAIN_DIR+filename
       batchL = batchL.reshape(1,1,128,128)
       realAB = realAB.reshape(1,2,128,128)
-      realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
       batchL = torch.tensor(batchL).to(device).float()
       realAB = torch.tensor(realAB).to(device).float()
       net.eval()
+      realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
       recLAB = net(realLAB)
-      recLAB = recLAB.cpu().numpy().reshape((128,128,2))
+      recLAB = recLAB.cpu().numpy().reshape((128,128,3))
       batchL = batchL.cpu().numpy().reshape((128,128,1))
       realAB = realAB.cpu().numpy().reshape((128,128,2))
       orig = cv2.imread(filepath)
