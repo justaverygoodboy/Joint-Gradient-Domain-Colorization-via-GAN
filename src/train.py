@@ -5,7 +5,6 @@ import utils
 import engine
 
 import torch
-import torchvision
 import warnings
 warnings.filterwarnings('ignore')
 import gc

@@ -80,6 +80,28 @@ def plot_some(test_data, colorization_model, device, epoch):
       preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
       imag_gird(0, orig, batchL, preds, epoch-1,idx)
 
+def plot_some_AE(test_data, net, device, epoch):
+  with torch.no_grad():
+    indexes = [0, 2, 9]
+    for idx in indexes:
+      batchL, realAB, filename = test_data[idx]
+      filepath = config.TRAIN_DIR+filename
+      batchL = batchL.reshape(1,1,128,128)
+      realAB = realAB.reshape(1,2,128,128)
+      realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
+      batchL = torch.tensor(batchL).to(device).float()
+      realAB = torch.tensor(realAB).to(device).float()
+      net.eval()
+      recLAB = net(realLAB)
+      recLAB = recLAB.cpu().numpy().reshape((128,128,2))
+      batchL = batchL.cpu().numpy().reshape((128,128,1))
+      realAB = realAB.cpu().numpy().reshape((128,128,2))
+      orig = cv2.imread(filepath)
+      orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (128,128))
+      rec = preprocess(recLAB).reshape(128,128,3) 
+      result = cv2.cvtColor(rec, cv2.COLOR_Lab2RGB)
+      imag_gird(0, orig, batchL, result, epoch-1,idx)
+
 def create_checkpoint(epoch, netG, optG, netD, optD, max_checkpoint, save_path=config.CHECKPOINT_DIR):
   print('Saving Model and Optimizer weights.....')
   checkpoint = {
@@ -88,6 +110,21 @@ def create_checkpoint(epoch, netG, optG, netD, optD, max_checkpoint, save_path=c
         'generator_optimizer': optG.state_dict(),
         'discriminator_state_dict': netD.state_dict(),
         'discriminator_optimizer': optD.state_dict()
+    }
+  torch.save(checkpoint, f'{save_path}{epoch}_checkpoint.pt')
+  print('Weights Saved !!')
+  del checkpoint
+  files = glob.glob(os.path.expanduser(f"{save_path}*"))
+  sorted_files = sorted(files, key=lambda t: -os.stat(t).st_mtime)
+  if len(sorted_files) > max_checkpoint:
+    os.remove(sorted_files[-1])
+
+def create_checkpoint_AE(epoch, net, opt, max_checkpoint, save_path=config.CHECKPOINT_DIR):
+  print('Saving Model and Optimizer weights.....')
+  checkpoint = {
+        'epoch' : epoch,
+        'AE_state_dict' :net.state_dict(),
+        'AE_optimizer': opt.state_dict(),
     }
   torch.save(checkpoint, f'{save_path}{epoch}_checkpoint.pt')
   print('Weights Saved !!')
@@ -124,6 +161,31 @@ def load_checkpoint(checkpoint_directory, netG, optG, netD, optD, device):
         print('There are no checkpoints in the mentioned directoy, the Model will train from scratch.')
         epoch_checkpoint = 1
         return netG, optG, netD, optD, epoch_checkpoint
+
+def load_checkpoint_AE(checkpoint_directory, net, opt, device):
+    load_from_checkpoint = False
+    files = glob.glob(os.path.expanduser(f"{checkpoint_directory}*"))
+    for file in files:
+        if file.endswith('.pt'):
+            load_from_checkpoint=True
+            break
+    if load_from_checkpoint:
+        print('Loading Model and optimizer states from checkpoint....')
+        sorted_files = sorted(files, key=lambda t: -os.stat(t).st_mtime)
+        checkpoint = torch.load(f'{sorted_files[0]}')
+        epoch_checkpoint = checkpoint['epoch'] + 1
+        net.load_state_dict(checkpoint['AE_state_dict'])
+        net.to(device)
+        opt.load_state_dict(checkpoint['AE_optimizer'])
+        print('Loaded States !!!')
+        print(f'It looks like the this states belong to epoch {epoch_checkpoint-1}.')
+        print(f'so the model will train for {config.NUM_EPOCHS - (epoch_checkpoint-1)} more epochs.')
+        print(f'If you want to train for more epochs, change the "NUM_EPOCHS" in config.py !!')
+        return net, opt, epoch_checkpoint
+    else:
+        print('There are no checkpoints in the mentioned directoy, the Model will train from scratch.')
+        epoch_checkpoint = 1
+        return net, opt, epoch_checkpoint
     
 def plot_gan_loss(G_losses, D_losses,epoch):
   plt.figure(figsize=(10,5))
