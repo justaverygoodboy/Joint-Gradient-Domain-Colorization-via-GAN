@@ -95,6 +95,8 @@ def plot_some_AE(test_data, net, device, epoch):
       net.eval()
       realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
       recLAB = net(realLAB)
+      recL = recLAB[:,1:3,:,:,]
+      show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],1)
       recLAB = recLAB.cpu().numpy().reshape((128,128,3))
       batchL = batchL.cpu().numpy().reshape((128,128,1))
       realAB = realAB.cpu().numpy().reshape((128,128,2))
