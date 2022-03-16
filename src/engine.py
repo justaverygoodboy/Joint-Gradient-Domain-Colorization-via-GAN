@@ -45,7 +45,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       Loss_Percp = PerceptualLoss()(predLAB,realLAB)
       Loss_Gradient = GradientLoss()(predAB,trainAB)
       #############
-      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.003 #总loss
+      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.01 #总loss
       Loss_G.backward()
       optG.step() # 使用生成网络的优化器优化
       losses['G_losses'].append(Loss_G.item())
