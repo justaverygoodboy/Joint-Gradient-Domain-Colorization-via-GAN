@@ -15,7 +15,7 @@ class unetConv2(nn.Module):
         p = padding
         if is_batchnorm:
             for i in range(1, n + 1): #两层 Conv-BN-ReLU
-                conv = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p),
+                conv = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p), # (w-kz)+2p+1，这里尺寸不变
                                      nn.BatchNorm2d(out_size),
                                      nn.ReLU(inplace=True), )
                 setattr(self, 'conv%d' % i, conv)
