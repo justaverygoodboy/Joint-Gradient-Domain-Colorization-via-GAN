@@ -27,7 +27,7 @@ def map_fn(index=None, flags=None):
   DEVICE = config.DEVICE
   ######### 定义模型 #################
   ## GAN网络
-  netG = model.SAResGenerator().float()
+  netG = model.UNet_3Plus().float()
   netD = model.discriminator_model().float()
 
   ######################################
