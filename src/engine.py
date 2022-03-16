@@ -43,7 +43,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       Loss_WL = wgan_loss(discpred, True) # WL是辨别器输出和真实的loss
       Loss_MSE = nn.MSELoss()(predAB, trainAB) #MSE是预测的AB和真实AB的L2
       Loss_Percp = PerceptualLoss()(predLAB,realLAB)
-      Loss_Gradient = GradientLoss(predAB,trainAB)
+      Loss_Gradient = GradientLoss()(predAB,trainAB)
       #############
       Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.003 #总loss
       Loss_G.backward()

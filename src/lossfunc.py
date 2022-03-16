@@ -58,31 +58,33 @@ class PerceptualLoss(nn.Module):
             loss += self.criterion(x_fea,y_fea.detach())
         return loss
 
-class Gradient_Net(nn.Module):
-  def __init__(self):
-    super(Gradient_Net, self).__init__()
-    kernel_x = [[-1., 0., 1.], [-2., 0., 2.], [-1., 0., 1.]]
-    kernel_x = torch.FloatTensor(kernel_x).unsqueeze(0).unsqueeze(0).to(device)
+class GradientLoss(nn.Module):
+    def __init__(self):
+        super(GradientLoss, self).__init__()
+        sobel_x = torch.Tensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]])
+        sobel_y = torch.Tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
+        sobel_2x = torch.Tensor(1, 2, 3, 3)
+        sobel_2y = torch.Tensor(1, 2, 3, 3)
+        sobel_2x[:, 0:2, :, :] = sobel_x
+        sobel_2y[:, 0:2, :, :] = sobel_y
+        self.conv_hx = nn.Conv2d(2, 2, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv_hy = nn.Conv2d(2, 2, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv_hx.weight = torch.nn.Parameter(sobel_2x)
+        self.conv_hy.weight = torch.nn.Parameter(sobel_2y)
 
-    kernel_y = [[-1., -2., -1.], [0., 0., 0.], [1., 2., 1.]]
-    kernel_y = torch.FloatTensor(kernel_y).unsqueeze(0).unsqueeze(0).to(device)
+    def forward(self, X, Y):
+        X_hx = self.conv_hx(X)
+        X_hy = self.conv_hy(Y)
+        G_X = torch.abs(X_hx) + torch.abs(X_hy)
+        # compute gradient of Y
+        Y_hx = self.conv_hx(Y)
+        self.conv_hx.train(False)
+        Y_hy = self.conv_hy(Y)
+        self.conv_hy.train(False)
+        G_Y = torch.abs(Y_hx) + torch.abs(Y_hy)
+        loss = F.mse_loss(G_X, G_Y, size_average=True)
+        return loss
 
-    self.weight_x = nn.Parameter(data=kernel_x, requires_grad=False)
-    self.weight_y = nn.Parameter(data=kernel_y, requires_grad=False)
-
-  def forward(self, x):
-    grad_x = F.conv2d(x, self.weight_x)
-    grad_y = F.conv2d(x, self.weight_y)
-    gradient = torch.abs(grad_x) + torch.abs(grad_y)
-    return gradient
-
-def GradientLoss(x,y):
-    gradient_model = Gradient_Net().to(device)
-    gx = gradient_model(x)
-    gy = gradient_model(y)
-    criterion = nn.MSELoss()
-    loss = criterion(gx,gy)
-    return loss
 
 
    
