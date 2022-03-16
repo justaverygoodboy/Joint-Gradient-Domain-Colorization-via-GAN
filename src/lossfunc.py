@@ -1,11 +1,6 @@
-from turtle import forward
-from xml.parsers.expat import model
 import torch
-import numpy as np
 from torch import nn
-from torch.autograd import Variable
 import torch.nn.functional as F
-from math import exp
 from torchvision import models
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

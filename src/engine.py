@@ -61,7 +61,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       averaged_samples = (weights * trainAB ) + ((1 - weights) * predAB.detach())
       averaged_samples = torch.autograd.Variable(averaged_samples, requires_grad=True)
       avg_img = torch.cat([trainL, averaged_samples], dim=1)
-      discavg = netD(avg_img) #带噪声的结果》？
+      discavg = netD(avg_img)
       Loss_D_Fake = wgan_loss(discpred, False)
       Loss_D_Real = wgan_loss(discreal, True)
       Loss_D_avg = gp_loss(discavg, averaged_samples, config.GRADIENT_PENALTY_WEIGHT)

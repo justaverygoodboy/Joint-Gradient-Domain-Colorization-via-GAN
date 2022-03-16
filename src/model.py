@@ -32,7 +32,7 @@ class Self_Attn(nn.Module):
         proj_query  = self.query_conv(x).view(m_batchsize,-1,width*height).permute(0,2,1) # B X CX(N)
         # gx 得到B*C*N形状
         proj_key =  self.key_conv(x).view(m_batchsize,-1,width*height) # B X C x (*W*H)
-        # fx*gx^T bmm貌似李沐讲过
+        # fx*gx^T bmm为矩阵乘法(b,h,w)*(b,w,h)
         energy =  torch.bmm(proj_query,proj_key) # transpose check
         # 得到 attention map，形状B*N*N
         attention = self.softmax(energy) # BX (N) X (N) 
