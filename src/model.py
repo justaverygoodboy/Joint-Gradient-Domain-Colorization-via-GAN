@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torchvision
 import torch.nn.functional as F
 from unet.layers import unetConv2
 from unet.init_weights import init_weights
@@ -279,64 +278,6 @@ class UNet_3Plus(nn.Module):
         hd1,p1 = self.attn1(hd1)
         d1 = self.outconv1(hd1)  # d1->320*320*n_classes
         return F.sigmoid(d1)
-
-class SAResGenerator(nn.Module):
-    """Generator."""
-    def __init__(self):
-        super(SAResGenerator, self).__init__()
-        # 加个resnet152做主干
-        self.ResNet = torchvision.models.resnet152(pretrained=True)
-        self.ResNet = nn.Sequential(*list(self.ResNet.children())[:-2]) # b,2048,4,4
-        layer1 = []
-        layer2 = []
-        layer3 = []
-        layer4 = []
-        layer5 = []
-        layer6 = []
-        last = []
-        layer1.append(nn.ConvTranspose2d(2048, 1024, 4)) #2048->1024 1024,16,7,7
-        layer1.append(nn.BatchNorm2d(1024))
-        layer1.append(nn.ReLU())
-        layer2.append(nn.ConvTranspose2d(1024, 512, 4, 2, 1)) #b,512,14,14
-        layer2.append(nn.BatchNorm2d(512))
-        layer2.append(nn.ReLU())
-        layer3.append(nn.ConvTranspose2d(512, 256, 4, 2, 1)) #b,256,28,28
-        layer3.append(nn.BatchNorm2d(256))
-        layer3.append(nn.ReLU())
-        layer4.append(nn.ConvTranspose2d(256, 128, 4, 2, 1)) #b,128,56,56
-        layer4.append(nn.BatchNorm2d(128))
-        layer4.append(nn.ReLU())
-        layer5.append(nn.ConvTranspose2d(128,64,4,2,1)) #b,64,h,w
-        layer5.append(nn.BatchNorm2d(64))
-        layer5.append(nn.ReLU())
-        layer6.append(nn.ConvTranspose2d(64,32,9)) #b,32,h,w
-        layer6.append(nn.BatchNorm2d(32))
-        layer6.append(nn.ReLU())
-        self.l1 = nn.Sequential(*layer1)
-        self.l2 = nn.Sequential(*layer2)
-        self.l3 = nn.Sequential(*layer3)
-        self.l4 = nn.Sequential(*layer4)
-        self.l5 = nn.Sequential(*layer5)
-        self.l6 = nn.Sequential(*layer6)
-        last.append(nn.ConvTranspose2d(32, 2, 9)) #32,2,128,128
-        last.append(nn.Sigmoid())
-        self.last = nn.Sequential(*last)
-        self.attn1 = Self_Attn( 128, 'relu') #这里应该改256
-        self.attn2 = Self_Attn( 64,  'relu') #这里应该改128
-
-    def forward(self, img):
-        # z = z.view(z.size(0), z.size(1), 1, 1)
-        out=self.ResNet(img)
-        out=self.l1(out)
-        out=self.l2(out)
-        out=self.l3(out)
-        out=self.l4(out)
-        out,p1 = self.attn1(out)
-        out=self.l5(out)
-        out,p2 = self.attn2(out)
-        out=self.l6(out)
-        out=self.last(out)
-        return out
 
 # net D
 class discriminator_model(nn.Module):
