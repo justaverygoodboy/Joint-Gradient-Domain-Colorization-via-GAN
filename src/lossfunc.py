@@ -67,8 +67,8 @@ class GradientLoss(nn.Module):
         sobel_2y = torch.Tensor(1, 2, 3, 3)
         sobel_2x[:, 0:2, :, :] = sobel_x
         sobel_2y[:, 0:2, :, :] = sobel_y
-        self.conv_hx = nn.Conv2d(2, 2, kernel_size=3, stride=1, padding=1, bias=False)
-        self.conv_hy = nn.Conv2d(2, 2, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv_hx = nn.Conv2d(2, 2, kernel_size=3, stride=1, padding=1, bias=False).to(device)
+        self.conv_hy = nn.Conv2d(2, 2, kernel_size=3, stride=1, padding=1, bias=False).to(device)
         self.conv_hx.weight = torch.nn.Parameter(sobel_2x)
         self.conv_hy.weight = torch.nn.Parameter(sobel_2y)
 
