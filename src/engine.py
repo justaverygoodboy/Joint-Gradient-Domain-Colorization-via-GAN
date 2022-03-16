@@ -1,11 +1,9 @@
 import config
 import torch
-import numpy as np
 from tqdm import tqdm
 from torch import nn
 from lossfunc import PerceptualLoss
 from lossfunc import GradientLoss
-import utils
 
 def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   batch = 0
