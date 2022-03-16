@@ -78,7 +78,8 @@ class Gradient_Net(nn.Module):
 
 def GradientLoss(x,y):
     gradient_model = Gradient_Net().to(device)
-    gx = gradient_model(x),gy = gradient_model(y)
+    gx = gradient_model(x)
+    gy = gradient_model(y)
     criterion = nn.MSELoss()
     loss = criterion(gx,gy)
     return loss
