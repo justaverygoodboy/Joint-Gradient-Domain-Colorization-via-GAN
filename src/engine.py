@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from torch import nn
 from lossfunc import PerceptualLoss
+from lossfunc import GradientLoss
 import utils
 
 def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
@@ -39,11 +40,12 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       realLAB = torch.cat([trainL, trainAB], dim=1) #真实的图像
       predLAB = torch.cat([trainL, predAB], dim=1) #生成器得到的：预测的图像
       ############ Loss ##################################
-      Loss_WL = wgan_loss(discpred.float(), True) # WL是辨别器输出和真实的loss
-      Loss_MSE = nn.MSELoss()(predAB.float(), trainAB.float()) #MSE是预测的AB和真实AB的L2
-      Loss_Percp = PerceptualLoss()(predLAB.float(),realLAB.float())
+      Loss_WL = wgan_loss(discpred, True) # WL是辨别器输出和真实的loss
+      Loss_MSE = nn.MSELoss()(predAB, trainAB) #MSE是预测的AB和真实AB的L2
+      Loss_Percp = PerceptualLoss()(predLAB,realLAB)
+      Loss_Gradient = GradientLoss(predAB,trainAB)
       #############
-      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 #总loss
+      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.003 #总loss
       Loss_G.backward()
       optG.step() # 使用生成网络的优化器优化
       losses['G_losses'].append(Loss_G.item())
