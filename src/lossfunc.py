@@ -71,7 +71,8 @@ class GradientLoss(nn.Module):
         self.conv_hy = nn.Conv2d(2, 2, kernel_size=3, stride=1, padding=1, bias=False).to(device)
         self.conv_hx.weight = torch.nn.Parameter(sobel_2x)
         self.conv_hy.weight = torch.nn.Parameter(sobel_2y)
-
+        self.conv_hx = self.conv_hx.to(device)
+        self.conv_hy = self.conv_hy.to(device)
     def forward(self, X, Y):
         X_hx = self.conv_hx(X)
         X_hy = self.conv_hy(Y)
