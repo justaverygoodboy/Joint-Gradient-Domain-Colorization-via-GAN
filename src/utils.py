@@ -59,6 +59,15 @@ def show_test_img(L,AB,idx):
   plt.title("Test Image")
   plt.savefig(f'test_{idx}')
 
+def show_single_channel(x,name):
+  x = x.cpu().numpy().reshape((x.shape[2],x.shape[2],1))
+  x = preprocess(x)
+  plt.figure("Channel Image")
+  plt.imshow(x)
+  plt.title("Channel Image")
+  plt.savefig(f'test_{name}')
+
+
 def plot_some(test_data, colorization_model, device, epoch):
   with torch.no_grad():
     indexes = [0, 2, 9]

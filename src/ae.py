@@ -37,20 +37,19 @@ def train():
   ## 迭代读取数据，直接分离了L和AB通道
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
-      ########### add noise #################
+
       trainL = torch.tensor(trainL, device=DEVICE).float()
       trainAB = torch.tensor(trainAB, device=DEVICE).float()
-      realLAB = torch.cat([trainL, trainAB], dim=1) #真实的图像
+      realLAB = torch.cat([trainL, trainAB], dim=1) 
       opt.zero_grad()
-      predLAB = net(realLAB) #得到预测的AB、类向量、D辨别结果
-      ############ Loss ##################################
-      Loss_MSE = nn.MSELoss()(predLAB, realLAB) #MSE是预测的AB和真实AB的L2
-      #############
+      predLAB = net(realLAB) 
+
+      Loss_MSE = nn.MSELoss()(predLAB, realLAB) 
       Loss_MSE.backward()
-      opt.step() # 使用生成网络的优化器优化
+      opt.step() 
       losses['MSE'].append(Loss_MSE.item())
       # Output training stats
-      if batch % 10 == 0: #原本是100
+      if batch % 10 == 0: 
         print('MSE: %.8f '% (Loss_MSE.item()))
 def fn():
     for epoch in range(epoch_checkpoint,config.NUM_EPOCHS+1):
