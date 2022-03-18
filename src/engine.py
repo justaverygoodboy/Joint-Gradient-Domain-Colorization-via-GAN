@@ -25,7 +25,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
       ########### add noise #################
-      z = torch.rand((trainL.size(0),2,128,128),device=device)
+      z = torch.randn((trainL.size(0),2,128,128),device=device) # change to normal distribution
       # trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里要不要把ab通道改成噪音
       trainL = torch.tensor(trainL, device=device).float()
       trainAB = torch.tensor(trainAB, device=device).float()

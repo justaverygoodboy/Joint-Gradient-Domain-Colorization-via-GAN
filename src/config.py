@@ -24,6 +24,8 @@ KEEP_CKPT = 2 #init 2
 
 if torch.cuda.is_available():
   DEVICE = torch.device('cuda')
+  print(DEVICE)
 else:
+  assert False
   DEVICE = 'cpu'
 

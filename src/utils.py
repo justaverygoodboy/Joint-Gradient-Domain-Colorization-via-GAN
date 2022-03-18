@@ -18,8 +18,8 @@ def preprocess(imgs):
   return imgs.astype(np.uint8) # torch.unit8
 
 def reconstruct(batchX, predictedY, filelist):
-    batchX = batchX.reshape(224,224,1) 
-    predictedY = predictedY.reshape(224,224,2)
+    batchX = batchX.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,1) 
+    predictedY = predictedY.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,2)
     result = np.concatenate((batchX, predictedY), axis=2)
     result = cv2.cvtColor(result, cv2.COLOR_Lab2RGB)
     save_results_path = config.OUT_DIR
@@ -30,8 +30,15 @@ def reconstruct(batchX, predictedY, filelist):
     return result
     
 def reconstruct_no(batchX, predictedY):
-    batchX = batchX.reshape(128,128,1) 
-    predictedY = predictedY.reshape(128,128,2)
+    batchX = batchX.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,1) 
+    predictedY = predictedY.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,2)
+    result = np.concatenate((batchX, predictedY), axis=2)
+    result = cv2.cvtColor(result, cv2.COLOR_Lab2RGB)
+    return result
+
+def reconstruct_256(batchX, predictedY):
+    batchX = batchX.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,1) 
+    predictedY = predictedY.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,2)
     result = np.concatenate((batchX, predictedY), axis=2)
     result = cv2.cvtColor(result, cv2.COLOR_Lab2RGB)
     return result
@@ -50,14 +57,14 @@ def imag_gird(axrow, orig, batchL, preds, epoch,idx):
   plt.savefig(f'../result/sample_preds_{epoch}_{idx}')
   plt.close()
 
-def show_test_img(L,AB,idx):
-  AB = AB.cpu().numpy().reshape((128,128,2))
-  L = L.cpu().numpy().reshape((128,128,1))
-  img = reconstruct_no(preprocess(L), preprocess(AB))
+def show_test_img(L,AB,epoch,idx):
+  AB = AB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
+  L = L.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
+  img = reconstruct_256(preprocess(L), preprocess(AB))
   plt.figure("Test Image")
   plt.imshow(img)
   plt.title("Test Image")
-  plt.savefig(f'test_{idx}')
+  plt.savefig(f'test_{epoch}_{idx}')
 
 def show_single_channel(x,name):
   x = x.cpu().numpy().reshape((x.shape[2],x.shape[2],1))
@@ -74,19 +81,19 @@ def plot_some(test_data, colorization_model, device, epoch):
     for idx in indexes:
       batchL, realAB, filename = test_data[idx]
       filepath = config.TRAIN_DIR+filename
-      batchL = batchL.reshape(1,1,128,128)
-      realAB = realAB.reshape(1,2,128,128)
+      batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
+      realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
       batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
       batchL_3 = batchL_3.to(device).float()
       batchL = torch.tensor(batchL).to(device).float()
       realAB = torch.tensor(realAB).to(device).float()
       colorization_model.eval()
       batch_predAB = colorization_model(batchL_3)
-      batch_predAB = batch_predAB.cpu().numpy().reshape((128,128,2))
-      batchL = batchL.cpu().numpy().reshape((128,128,1))
-      realAB = realAB.cpu().numpy().reshape((128,128,2))
+      batch_predAB = batch_predAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
+      batchL = batchL.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
+      realAB = realAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
       orig = cv2.imread(filepath)
-      orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (128,128))
+      orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (config.IMAGE_SIZE,config.IMAGE_SIZE))
       preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
       imag_gird(0, orig, batchL, preds, epoch-1,idx)
 
@@ -97,23 +104,14 @@ def plot_some_AE(test_data, net, device, epoch):
       transf = transforms.ToTensor()
       batchL, realAB, filename = test_data[idx]
       filepath = config.TRAIN_DIR+filename
-      batchL = batchL.reshape(1,1,128,128)
-      realAB = realAB.reshape(1,2,128,128)
+      batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
+      realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
       batchL = torch.tensor(batchL).to(device).float()
       realAB = torch.tensor(realAB).to(device).float()
       net.eval()
       realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
       recLAB = net(realLAB)
-      recL = recLAB[:,1:3,:,:,]
-      show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],1)
-      recLAB = recLAB.cpu().numpy().reshape((128,128,3))
-      batchL = batchL.cpu().numpy().reshape((128,128,1))
-      realAB = realAB.cpu().numpy().reshape((128,128,2))
-      orig = cv2.imread(filepath)
-      orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (128,128))
-      rec = preprocess(recLAB).reshape(128,128,3) 
-      result = cv2.cvtColor(rec, cv2.COLOR_Lab2RGB)
-      imag_gird(0, orig, batchL, result, epoch-1,idx)
+      show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],epoch,idx)
 
 def create_checkpoint(epoch, netG, optG, netD, optD, max_checkpoint, save_path=config.CHECKPOINT_DIR):
   print('Saving Model and Optimizer weights.....')
