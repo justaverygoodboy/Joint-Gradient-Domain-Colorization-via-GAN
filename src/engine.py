@@ -4,6 +4,7 @@ from tqdm import tqdm
 from torch import nn
 from lossfunc import PerceptualLoss
 from lossfunc import GradientLoss
+import numpy as np
 
 def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   batch = 0
@@ -12,7 +13,6 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       return -torch.mean(prediction.float())
     else:
       return torch.mean(prediction.float())
-
   def gp_loss(y_pred, averaged_samples, gradient_penalty_weight):
     gradients = torch.autograd.grad(y_pred,averaged_samples,
                               grad_outputs=torch.ones(y_pred.size(), device=device),
@@ -21,34 +21,31 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
     gradient_penalty = (((gradients+1e-16).norm(2, dim=1) - 1) ** 2).mean() * gradient_penalty_weight
     return gradient_penalty
 
-  ## 迭代读取数据，直接分离了L和AB通道
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
       ########### add noise #################
-      z = torch.randn((trainL.size(0),2,128,128),device=device) # change to normal distribution
-      # trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里要不要把ab通道改成噪音
+      # z = torch.randn((trainL.size(0),2,128,128),device=device) # change to normal distribution
+      trainL_3 = torch.tensor(np.tile(trainL.cpu(), [1,3,1,1]), device=device).float() #这里要不要把ab通道改成噪音
       trainL = torch.tensor(trainL, device=device).float()
       trainAB = torch.tensor(trainAB, device=device).float()
-      trainL_3 = torch.cat([trainL,z],dim=1) # add noise to grayscale image for training
+      # trainL_3 = torch.cat([trainL,z],dim=1) # add noise to grayscale image for training
       ############ GAN MODEL ( Training Generator) ###################
       optG.zero_grad()
-      predAB, discpred = GAN_Model(trainL, trainL_3) #得到预测的AB、类向量、D辨别结果
-      D_G_z1 = discpred.mean().item() # GAN生成后进入D的判别结果
-      ############ 先获得真实的图像和生成的图像 #############
-      realLAB = torch.cat([trainL, trainAB], dim=1) #真实的图像
-      predLAB = torch.cat([trainL, predAB], dim=1) #生成器得到的：预测的图像
+      predAB, discpred = GAN_Model(trainL, trainL_3) 
+      D_G_z1 = discpred.mean().item()
+      realLAB = torch.cat([trainL, trainAB], dim=1)
+      predLAB = torch.cat([trainL, predAB], dim=1)
       ############ Loss ##################################
-      Loss_WL = wgan_loss(discpred, True) # WL是辨别器输出和真实的loss
-      Loss_MSE = nn.MSELoss()(predAB, trainAB) #MSE是预测的AB和真实AB的L2
+      Loss_WL = wgan_loss(discpred, True) 
+      Loss_MSE = nn.MSELoss()(predAB, trainAB) 
       Loss_Percp = PerceptualLoss()(predLAB,realLAB)
       Loss_Gradient = GradientLoss()(predAB,trainAB)
-      #############
       Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.01 #总loss
       Loss_G.backward()
-      optG.step() # 使用生成网络的优化器优化
+      optG.step() 
       losses['G_losses'].append(Loss_G.item())
       losses['EPOCH_G_losses'].append(Loss_G.item())
-      ################################################################
+
       ############### Discriminator Training #########################
       for param in netD.parameters(): # 将D的设置为可BP
         param.requires_grad = True

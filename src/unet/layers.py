@@ -47,6 +47,8 @@ class UpsampleBLock(nn.Module):
         self.conv = nn.Conv2d(in_channels, in_channels * up_scale ** 2, kernel_size=3, padding=1)
         self.pixel_shuffle = nn.PixelShuffle(up_scale)
         self.prelu = nn.PReLU()
+        for m in self.children():
+            init_weights(m, init_type='kaiming')
 
     def forward(self, x):
         x = self.conv(x)
@@ -94,8 +96,6 @@ class unetUp_origin(nn.Module):
             init_weights(m, init_type='kaiming')
 
     def forward(self, inputs0, *input):
-        # print(self.n_concat)
-        # print(input)
         outputs0 = self.up(inputs0)
         for i in range(len(input)):
             outputs0 = torch.cat([outputs0, input[i]], 1)

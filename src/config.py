@@ -3,7 +3,8 @@ import torch
 DATA_DIR = '../input/'
 OUT_DIR = '../result/'
 MODEL_DIR = '../models/'
-CHECKPOINT_DIR = '../checkpoint/'
+GAN_CHECKPOINT_DIR = '../checkpoint/'
+AE_CHECKPOINT_DIR = '../ae_checkpoint'
 
 TRAIN_DIR = DATA_DIR+"train/"  # UPDATE
 TEST_DIR = DATA_DIR+"test/" # UPDATE
@@ -11,7 +12,8 @@ TEST_DIR = DATA_DIR+"test/" # UPDATE
 os.makedirs(TRAIN_DIR, exist_ok=True)
 os.makedirs(TEST_DIR, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
-os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+os.makedirs(GAN_CHECKPOINT_DIR, exist_ok=True)
+os.makedirs(AE_CHECKPOINT_DIR, exist_ok=True)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # DATA INFORMATION
