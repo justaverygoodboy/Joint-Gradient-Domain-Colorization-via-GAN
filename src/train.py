@@ -22,7 +22,7 @@ def map_fn(index=None, flags=None):
       sampler=train_sampler,
       num_workers=6,
       drop_last=True,
-      pin_memory=False)
+      pin_memory=True)
   DEVICE = config.DEVICE
   ######### 定义模型 #################
   ## GAN网络
@@ -54,7 +54,7 @@ def map_fn(index=None, flags=None):
     losses['EPOCH_G_losses'] = []
     losses['EPOCH_D_losses'] = []
     engine.train(train_loader, netGAN, netD, optG, optD, device=DEVICE, losses=losses)
-    utils.create_checkpoint(epoch, netG, optG, netD, optD, max_checkpoint=config.KEEP_CKPT, save_path = config.CHECKPOINT_DIR)
+    # utils.create_checkpoint(epoch, netG, optG, netD, optD, max_checkpoint=config.KEEP_CKPT, save_path = config.CHECKPOINT_DIR)
     utils.plot_some(train_data, netG, DEVICE, epoch)
     gc.collect() #这个貌似是垃圾回收
     ###### 这代码没测试吗 ############

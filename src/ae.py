@@ -45,7 +45,7 @@ def train():
       N_AB = trainAB + 0.1*L_AB
       realLAB = torch.cat([trainL, trainAB], dim=1)
       noiseLAB = torch.cat([N_L,N_AB],dim=1)
-      # noiseLAB = torch.cat([trainL,L_AB],dim=1) #灰图加噪声版本
+      # noiseLAB = torch.cat([trainL ,L_AB],dim=1) #灰图加噪声版本
       opt.zero_grad()
       predLAB = net(noiseLAB)
       # utils.show_test_img(trainL,predAB,999,batch) 
