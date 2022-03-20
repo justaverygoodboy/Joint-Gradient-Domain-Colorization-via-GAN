@@ -10,7 +10,6 @@ warnings.filterwarnings('ignore')
 
 def train(train_loader,net,opt,losses,DEVICE):
   batch = 0
-  ## 迭代读取数据，直接分离了L和AB通道
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
       L_Z = torch.randn(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE).to(DEVICE)
@@ -32,11 +31,11 @@ def train(train_loader,net,opt,losses,DEVICE):
         print('L: %.8f'% (Loss.item()))
 
 def fn():
-    torch.set_default_tensor_type('torch.FloatTensor') #这里加了.cuda
+    torch.set_default_tensor_type('torch.FloatTensor')
     torch.manual_seed(1) #1234
     torch.set_num_threads(1) 
     train_data = dataset.DATA(config.TRAIN_DIR) 
-    train_sampler = torch.utils.data.RandomSampler(train_data) # 这里应该是随机打乱数据
+    train_sampler = torch.utils.data.RandomSampler(train_data)
     train_loader = torch.utils.data.DataLoader(
           train_data,
           batch_size=config.BATCH_SIZE,
@@ -50,7 +49,6 @@ def fn():
     losses = {
           'Loss' : [],
       }
-
     # net, opt, epoch_checkpoint = utils.load_checkpoint("AE",config.AE_CHECKPOINT_DIR, net, opt,None,None, DEVICE)
     for epoch in range(1,config.NUM_EPOCHS+1):
         print('\n')
