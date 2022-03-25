@@ -342,7 +342,9 @@ class UNet_3Plus_AE(nn.Module):
         self.h4_Cat_hd4_GeLU = nn.GeLU(inplace=True)
 
         # hd5->20*20, hd4->40*40, Upsample 2 times
-        self.hd5_UT_hd4 = UpsampleBLock(1024,2);
+        # self.hd5_UT_hd4 = nn.ConvTranspose2d(1024,1024,kernel_size=4, stride=2, padding=1)  # 14*14
+        # self.hd5_UT_hd4 = UpsampleBLock(1024,2)
+        self.hd5_UT_hd4 = nn.Upsample(scale_factor=2, mode='bilinear')
         self.hd5_UT_hd4_conv = nn.Conv2d(filters[4], self.CatChannels, 3, padding=1) #1024->64
         self.hd5_UT_hd4_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd5_UT_hd4_GeLU = nn.GeLU(inplace=True)
@@ -371,17 +373,21 @@ class UNet_3Plus_AE(nn.Module):
         self.h3_Cat_hd3_GeLU = nn.GeLU(inplace=True)
 
         # hd4->40*40, hd4->80*80, Upsample 2 times
+        # self.hd4_UT_hd3 = nn.Upsample(scale_factor=2, mode='bilinear')  # 14*14
         self.hd4_UT_hd3 = UpsampleBLock(320,2)
         self.hd4_UT_hd3_conv = nn.Conv2d(self.UpChannels, self.CatChannels, 3, padding=1)
         self.hd4_UT_hd3_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd4_UT_hd3_GeLU = nn.GeLU(inplace=True)
 
         # hd5->20*20, hd4->80*80, Upsample 4 times
-        self.hd5_UT_hd3 = UpsampleBLock(1024,4)
+        # self.hd5_UT_hd3 = nn.ConvTranspose2d(1024,1024,4,4)  # 14*14
+        # self.hd5_UT_hd3 = UpsampleBLock(1024,4)
+        self.hd5_UT_hd3 = nn.Upsample(scale_factor=4, mode='bilinear')
         self.hd5_UT_hd3_conv = nn.Conv2d(filters[4], self.CatChannels, 3, padding=1)
         self.hd5_UT_hd3_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd5_UT_hd3_GeLU = nn.GeLU(inplace=True)
 
+        # fusion(h1_PT_hd3, h2_PT_hd3, h3_Cat_hd3, hd4_UT_hd3, hd5_UT_hd3)
         self.conv3d_1 = nn.Conv2d(self.UpChannels, self.UpChannels, 3, padding=1)  # 16
         self.bn3d_1 = nn.BatchNorm2d(self.UpChannels)
         self.GeLU3d_1 = nn.GeLU(inplace=True)
@@ -399,23 +405,28 @@ class UNet_3Plus_AE(nn.Module):
         self.h2_Cat_hd2_GeLU = nn.GeLU(inplace=True)
 
         # hd3->80*80, hd2->160*160, Upsample 2 times
+        # self.hd3_UT_hd2 = nn.ConvTranspose2d(320,320,kernel_size=4, stride=2, padding=1)  # 14*14
         self.hd3_UT_hd2 = UpsampleBLock(320,2)
         self.hd3_UT_hd2_conv = nn.Conv2d(self.UpChannels, self.CatChannels, 3, padding=1)
         self.hd3_UT_hd2_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd3_UT_hd2_GeLU = nn.GeLU(inplace=True)
 
         # hd4->40*40, hd2->160*160, Upsample 4 times
+        # self.hd4_UT_hd2 = nn.ConvTranspose2d(320,320,4,4)  # 14*14
         self.hd4_UT_hd2 = UpsampleBLock(320,4)
         self.hd4_UT_hd2_conv = nn.Conv2d(self.UpChannels, self.CatChannels, 3, padding=1)
         self.hd4_UT_hd2_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd4_UT_hd2_GeLU = nn.GeLU(inplace=True)
 
         # hd5->20*20, hd2->160*160, Upsample 8 times
+        # self.hd5_UT_hd2 = nn.ConvTranspose2d(1024,1024,8,8)  # 14*14
+        # self.hd5_UT_hd2 = UpsampleBLock(1024,8) # this is too many channels
         self.hd5_UT_hd2 = nn.Upsample(scale_factor=8, mode='bilinear')
         self.hd5_UT_hd2_conv = nn.Conv2d(filters[4], self.CatChannels, 3, padding=1)
         self.hd5_UT_hd2_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd5_UT_hd2_GeLU = nn.GeLU(inplace=True)
 
+        # fusion(h1_PT_hd2, h2_Cat_hd2, hd3_UT_hd2, hd4_UT_hd2, hd5_UT_hd2)
         self.conv2d_1 = nn.Conv2d(self.UpChannels, self.UpChannels, 3, padding=1)  # 16
         self.bn2d_1 = nn.BatchNorm2d(self.UpChannels)
         self.GeLU2d_1 = nn.GeLU(inplace=True)
@@ -427,29 +438,35 @@ class UNet_3Plus_AE(nn.Module):
         self.h1_Cat_hd1_GeLU = nn.GeLU(inplace=True)
 
         # hd2->160*160, hd1->320*320, Upsample 2 times
+        # self.hd2_UT_hd1 = nn.ConvTranspose2d(320,320,kernel_size=4, stride=2, padding=1)  # 14*14
         self.hd2_UT_hd1 = UpsampleBLock(320,2)
         self.hd2_UT_hd1_conv = nn.Conv2d(self.UpChannels, self.CatChannels, 3, padding=1)
         self.hd2_UT_hd1_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd2_UT_hd1_GeLU = nn.GeLU(inplace=True)
 
         # hd3->80*80, hd1->320*320, Upsample 4 times
+        # self.hd3_UT_hd1 = nn.ConvTranspose2d(320,320,4,4)  # 14*14
         self.hd3_UT_hd1 = UpsampleBLock(320,4)
         self.hd3_UT_hd1_conv = nn.Conv2d(self.UpChannels, self.CatChannels, 3, padding=1)
         self.hd3_UT_hd1_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd3_UT_hd1_GeLU = nn.GeLU(inplace=True)
 
         # hd4->40*40, hd1->320*320, Upsample 8 times
+        # self.hd4_UT_hd1 = nn.ConvTranspose2d(320,320,8,8)  # 14*14
         self.hd4_UT_hd1 = UpsampleBLock(320,8)
         self.hd4_UT_hd1_conv = nn.Conv2d(self.UpChannels, self.CatChannels, 3, padding=1)
         self.hd4_UT_hd1_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd4_UT_hd1_GeLU = nn.GeLU(inplace=True)
 
         # hd5->20*20, hd1->320*320, Upsample 16 times
+        # self.hd5_UT_hd1 = nn.ConvTranspose2d(1024,1024,16,16)  # 14*14
+        # self.hd5_UT_hd1 = UpsampleBLock(1024,16) # There is too largek, using bilinear instead
         self.hd5_UT_hd1 = nn.Upsample(scale_factor=16, mode='bilinear')
         self.hd5_UT_hd1_conv = nn.Conv2d(filters[4], self.CatChannels, 3, padding=1)
         self.hd5_UT_hd1_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd5_UT_hd1_GeLU = nn.GeLU(inplace=True)
 
+        # fusion(h1_Cat_hd1, hd2_UT_hd1, hd3_UT_hd1, hd4_UT_hd1, hd5_UT_hd1)
         self.conv1d_1 = nn.Conv2d(self.UpChannels, self.UpChannels, 3, padding=1)  # 16
         self.bn1d_1 = nn.BatchNorm2d(self.UpChannels)
         self.GeLU1d_1 = nn.GeLU(inplace=True)
