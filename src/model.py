@@ -95,7 +95,8 @@ class UNet_3Plus(nn.Module):
 
         # hd5->20*20, hd4->40*40, Upsample 2 times
         # self.hd5_UT_hd4 = nn.ConvTranspose2d(1024,1024,kernel_size=4, stride=2, padding=1)  # 14*14
-        self.hd5_UT_hd4 = UpsampleBLock(1024,2);
+        # self.hd5_UT_hd4 = UpsampleBLock(1024,2)
+        self.hd5_UT_hd4 = nn.Upsample(scale_factor=2, mode='bilinear')
         self.hd5_UT_hd4_conv = nn.Conv2d(filters[4], self.CatChannels, 3, padding=1) #1024->64
         self.hd5_UT_hd4_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd5_UT_hd4_GeLU = nn.GeLU(inplace=True)
@@ -132,7 +133,8 @@ class UNet_3Plus(nn.Module):
 
         # hd5->20*20, hd4->80*80, Upsample 4 times
         # self.hd5_UT_hd3 = nn.ConvTranspose2d(1024,1024,4,4)  # 14*14
-        self.hd5_UT_hd3 = UpsampleBLock(1024,4)
+        # self.hd5_UT_hd3 = UpsampleBLock(1024,4)
+        self.hd5_UT_hd3 = nn.Upsample(scale_factor=4, mode='bilinear')
         self.hd5_UT_hd3_conv = nn.Conv2d(filters[4], self.CatChannels, 3, padding=1)
         self.hd5_UT_hd3_bn = nn.BatchNorm2d(self.CatChannels)
         self.hd5_UT_hd3_GeLU = nn.GeLU(inplace=True)
