@@ -86,7 +86,7 @@ def plot_some(type,test_data, model, device, epoch):
         preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
         imag_gird(orig, batchL, preds, epoch-1,idx)
 
-def create_checkpoint(type,epoch, netG, optG, netD, optD, max_checkpoint, save_path=config.CHECKPOINT_DIR):
+def create_checkpoint(type,epoch, netG, optG, netD, optD, max_checkpoint, save_path=config.GAN_CHECKPOINT_DIR):
   print('Saving Model and Optimizer weights.....')
   if (type=="AE"):
     checkpoint = {
