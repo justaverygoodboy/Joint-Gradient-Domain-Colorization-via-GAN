@@ -51,9 +51,10 @@ def show_single_channel(x,name): #保存单通道图片 输入tensor和保存nam
 def plot_some(type,test_data, model, device, epoch):
   with torch.no_grad():
     if (type=="AE"):
-      dataLen = len(test_data)
-      # indexes = [0, 2, 9]
-      for idx in range(dataLen):
+      # dataLen = len(test_data)
+      indexes = [0, 9]
+      # for idx in range(dataLen):
+      for idx in indexes:
         transf = transforms.ToTensor()
         batchL, realAB, filename = test_data[idx]
         filepath = config.TRAIN_DIR+filename
@@ -88,7 +89,7 @@ def plot_some(type,test_data, model, device, epoch):
 
 def create_checkpoint(type,epoch, netG, optG, netD, optD, max_checkpoint, save_path=config.GAN_CHECKPOINT_DIR):
   print('Saving Model and Optimizer weights.....')
-  if (type=="AE"):
+  if (type!="AE"):
     checkpoint = {
           'epoch' : epoch,
           'generator_state_dict' :netG.state_dict(),

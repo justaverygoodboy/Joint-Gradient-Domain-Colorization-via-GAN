@@ -17,21 +17,21 @@ class unetConv2(nn.Module):
         #     for i in range(1, n + 1): #两层 Conv-BN-ReLU
         #         conv = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p), # (w-kz)+2p+1，这里尺寸不变
         #                              nn.BatchNorm2d(out_size),
-        #                              nn.ReLU(inplace=True), )
+        #                              nn.ReLU(), )
         #         setattr(self, 'conv%d' % i, conv)
         #         in_size = out_size
 
         # else:
         #     for i in range(1, n + 1):
         #         conv = nn.Sequential(nn.Conv2d(in_size, out_size, ks, s, p),
-        #                              nn.ReLU(inplace=True), )
+        #                              nn.ReLU(), )
         #         setattr(self, 'conv%d' % i, conv)
         #         in_size = out_size
         conv = nn.Sequential(
             nn.Conv2d(in_size,out_size,ks,s,p),
             nn.BatchNorm2d(out_size),
             nn.Conv2d(out_size,out_size,ks,s,p),
-            nn.GELU(inplace=True)
+            nn.GELU()
             )
         setattr(self,'conv',conv)
         # initialise the blocks
