@@ -543,20 +543,20 @@ class discriminator_model(nn.Module):
     self.conv3 = nn.Conv2d(128, 256, 4, 2, 1) # 256,16,16
     self.conv4 = nn.Conv2d(256, 512, 4, 2, 1) # 512,8,8
     self.conv5 = nn.Conv2d(512, 1, 4) # 1,5,5 
-    self.leaky_GELU = nn.LeakyGELU(0.1)
+    self.leaky_ReLU = nn.LeakyReLU(0.1)
     self.attn1 = Self_Attn(256,'GELU')
     self.attn2 = Self_Attn(512,'GELU')
 
   def forward(self,input):
     net = self.conv1(input)              
-    net = self.leaky_GELU(net)         
+    net = self.leaky_ReLU(net)         
     net = self.conv2(net)              
-    net = self.leaky_GELU(net)         
+    net = self.leaky_ReLU(net)         
     net = self.conv3(net)              
-    net = self.leaky_GELU(net)          
+    net = self.leaky_ReLU(net)          
     net,p1 = self.attn1(net)
     net = self.conv4(net)              
-    net = self.leaky_GELU(net)
+    net = self.leaky_ReLU(net)
     net,p2 = self.attn2(net)          
     net = self.conv5(net)               
     return net.squeeze()
