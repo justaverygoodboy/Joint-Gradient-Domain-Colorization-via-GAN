@@ -35,7 +35,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       D_G_z1 = discpred.mean().item()
       realLAB = torch.cat([trainL, trainAB], dim=1)
       predLAB = torch.cat([trainL, predAB], dim=1)
-      ############ Loss ##################################
+      ############ G Loss ##################################
       Loss_WL = wgan_loss(discpred, True) 
       Loss_MSE = nn.MSELoss()(predAB, trainAB) 
       Loss_Percp = PerceptualLoss()(predLAB,realLAB)
@@ -50,26 +50,38 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       for param in netD.parameters(): # 将D的设置为可BP
         param.requires_grad = True
       optD.zero_grad()
-      discpred = netD(predLAB.detach()) #预测图像辨别结果
-      D_G_z2 = discpred.mean().item() #均值
-      discreal = netD(realLAB) #真实图像辨别结果
-      D_x = discreal.mean().item() #均值
-      weights = torch.randn((trainAB.size(0),1,1,1), device=device)          
-      averaged_samples = (weights * trainAB ) + ((1 - weights) * predAB.detach())
-      averaged_samples = torch.autograd.Variable(averaged_samples, requires_grad=True)
-      avg_img = torch.cat([trainL, averaged_samples], dim=1)
-      discavg = netD(avg_img)
-      Loss_D_Fake = wgan_loss(discpred, False)
-      Loss_D_Real = wgan_loss(discreal, True)
-      Loss_D_avg = gp_loss(discavg, averaged_samples, config.GRADIENT_PENALTY_WEIGHT)
-      Loss_D = Loss_D_Fake + Loss_D_Real + Loss_D_avg
-      Loss_D.backward()
+
+      ###### hinge loss ######
+      ## d_real
+      d_out_real = netD(realLAB)
+      d_loss_real = nn.ReLU()(1.0-d_out_real).mean()
+      ## d_fake
+      d_out_fake = netD(predLAB.detach())
+      d_loss_fake = nn.ReLU(1.0+d_out_fake).mean()
+      d_loss = d_loss_real + d_loss_fake
+      ############## gp ############
+      # discpred = netD(predLAB.detach()) #预测图像辨别结果
+      # D_G_z2 = discpred.mean().item() #均值
+      # discreal = netD(realLAB) #真实图像辨别结果
+      # D_x = discreal.mean().item() #均值
+      # gp
+      # weights = torch.randn((trainAB.size(0),1,1,1), device=device)          
+      # averaged_samples = (weights * trainAB ) + ((1 - weights) * predAB.detach())
+      # averaged_samples = torch.autograd.Variable(averaged_samples, requires_grad=True)
+      # avg_img = torch.cat([trainL, averaged_samples], dim=1)
+      # discavg = netD(avg_img)
+      # Loss_D_Fake = wgan_loss(discpred, False)
+      # Loss_D_Real = wgan_loss(discreal, True)
+      # Loss_D_avg = gp_loss(discavg, averaged_samples, config.GRADIENT_PENALTY_WEIGHT)
+      # Loss_D = Loss_D_Fake + Loss_D_Real + Loss_D_avg
+      # Loss_D.backward()
+      d_loss.backward()
       optD.step()
       losses['D_losses'].append(Loss_D.item())
       losses['EPOCH_D_losses'].append(Loss_D.item())
       # Output training stats
       if batch % 10 == 0: #原本是100
-        print('MSE: %.8f | Percp: %.8f | Loss_Grad:%.8f| Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f | WGAN_F(G): %.8f | WGAN_F(D): %.8f | WGAN_R(D): %.8f | WGAN_A(D): %.8f | '
-            % (Loss_MSE.item(),Loss_Percp.item(),Loss_Gradient.item(),Loss_D.item(), Loss_G.item(), D_x, D_G_z1, Loss_WL.item(), Loss_D_Fake.item(), Loss_D_Real.item(), Loss_D_avg.item()))
+        print('MSE: %.8f | Percp: %.8f | Loss_Grad:%.8f| Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f |'
+            % (Loss_MSE.item(),Loss_Percp.item(),Loss_Gradient.item(),d_loss.item(), Loss_G.item(), d_loss_real, d_loss_fake))
 
       

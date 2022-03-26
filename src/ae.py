@@ -16,14 +16,13 @@ def train(train_loader,net,opt,losses,DEVICE):
       L_AB = torch.randn(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE).to(DEVICE)
       trainL = torch.tensor(trainL, device=DEVICE).float()
       trainAB = torch.tensor(trainAB, device=DEVICE).float()
-      N_L = trainL + 0.2*L_Z
       N_AB = trainAB + 0.2*L_AB
       realLAB = torch.cat([trainL, trainAB], dim=1)
-      noiseLAB = torch.cat([N_L,N_AB],dim=1)
+      noiseLAB = torch.cat([trainL,N_AB],dim=1)
       # noiseLAB = torch.cat([trainL ,L_AB],dim=1) #灰图加噪声版本
       opt.zero_grad()
-      predLAB = net(noiseLAB)
-      Loss = nn.MSELoss()(predLAB,realLAB)
+      predAB = net(noiseLAB)
+      Loss = nn.MSELoss()(predAB,trainAB)
       Loss.backward()
       opt.step() 
       losses['Loss'].append(Loss.item())
