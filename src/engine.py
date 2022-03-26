@@ -2,7 +2,7 @@ import config
 import torch
 from tqdm import tqdm
 from torch import nn
-from lossfunc import PerceptualLoss
+# from lossfunc import PerceptualLoss
 from lossfunc import GradientLoss
 import numpy as np
 
@@ -38,9 +38,10 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       ############ G Loss ##################################
       Loss_WL = wgan_loss(discpred, True) 
       Loss_MSE = nn.MSELoss()(predAB, trainAB) 
-      Loss_Percp = PerceptualLoss()(predLAB,realLAB)
+      # Loss_Percp = PerceptualLoss()(predLAB,realLAB)
       Loss_Gradient = GradientLoss()(predAB,trainAB)
-      Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.01 #总loss
+      # Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.01 #总loss
+      Loss_G = Loss_WL*0.01 + Loss_MSE + Loss_Gradient*0.01 #总loss
       Loss_G.backward()
       optG.step() 
       losses['G_losses'].append(Loss_G.item())
@@ -57,7 +58,7 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       d_loss_real = nn.ReLU()(1.0-d_out_real).mean()
       ## d_fake
       d_out_fake = netD(predLAB.detach())
-      d_loss_fake = nn.ReLU(1.0+d_out_fake).mean()
+      d_loss_fake = nn.ReLU()(1.0+d_out_fake).mean()
       d_loss = d_loss_real + d_loss_fake
       ############## gp ############
       # discpred = netD(predLAB.detach()) #预测图像辨别结果
@@ -77,11 +78,11 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       # Loss_D.backward()
       d_loss.backward()
       optD.step()
-      losses['D_losses'].append(Loss_D.item())
-      losses['EPOCH_D_losses'].append(Loss_D.item())
+      losses['D_losses'].append(d_loss.item())
+      losses['EPOCH_D_losses'].append(d_loss.item())
       # Output training stats
       if batch % 10 == 0: #原本是100
-        print('MSE: %.8f | Percp: %.8f | Loss_Grad:%.8f| Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f |'
-            % (Loss_MSE.item(),Loss_Percp.item(),Loss_Gradient.item(),d_loss.item(), Loss_G.item(), d_loss_real, d_loss_fake))
+        print('MSE: %.8f | Loss_Grad:%.8f| Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f |'
+            % (Loss_MSE.item(),Loss_Gradient.item(),d_loss.item(), Loss_G.item(), d_loss_real, d_loss_fake))
 
       

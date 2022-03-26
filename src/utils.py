@@ -66,6 +66,20 @@ def plot_some(type,test_data, model, device, epoch):
         realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
         recLAB = model(realLAB)
         show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],epoch,idx)
+    elif(type=="test"):
+      dataLen = len(test_data)
+      for idx in range(dataLen):
+        transf = transforms.ToTensor()
+        batchL, realAB, filename = test_data[idx]
+        filepath = config.TRAIN_DIR+filename
+        batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
+        realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
+        batchL = torch.tensor(batchL).to(device).float()
+        realAB = torch.tensor(realAB).to(device).float()
+        model.eval()
+        realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
+        recLAB = model(realLAB)
+        show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],epoch,idx)
     else:
       indexes = [0, 2, 9]
       for idx in indexes:
@@ -134,6 +148,27 @@ def load_checkpoint(type,checkpoint_directory, netG, optG, netD, optD, device):
         print('There are no checkpoints.')
         epoch_checkpoint = 1
         return netG, optG, epoch_checkpoint
+  elif(type=="test"):
+    load_from_checkpoint = False
+    files = glob.glob(os.path.expanduser(f"{checkpoint_directory}*"))
+    for file in files:
+        if file.endswith('.pt'):
+            load_from_checkpoint=True
+            break
+    if load_from_checkpoint:
+        print('Loading Model and optimizer states from checkpoint....')
+        sorted_files = sorted(files, key=lambda t: -os.stat(t).st_mtime)
+        checkpoint = torch.load(f'{sorted_files[0]}')
+        epoch_checkpoint = checkpoint['epoch'] + 1
+        netG.load_state_dict(checkpoint['generator_state_dict'])
+        netG.to(device)
+        print('Loaded States !!!')
+        print(f'It looks like the this states belong to epoch {epoch_checkpoint-1}.')
+        return netG, epoch_checkpoint
+    else:
+        print('There are no checkpoints in the mentioned directoy, the Model will train from scratch.')
+        epoch_checkpoint = 1
+        return netG, optG, netD, optD, epoch_checkpoint
   else:
     load_from_checkpoint = False
     files = glob.glob(os.path.expanduser(f"{checkpoint_directory}*"))

@@ -254,7 +254,7 @@ class UNet_3Plus(nn.Module):
 
         # h5 = self.maxpool4(h4) # b,512,8,8
         h5 = self.down_conv4(h4)
-        hd5 = SpectralNorm(self.conv5(h5))  # b,1024,8,8
+        hd5 = self.conv5(h5)  # b,1024,8,8
 
         ## -------------Decoder-------------
         h1_PT_hd4 = self.h1_PT_hd4_GELU(self.h1_PT_hd4_bn(self.h1_PT_hd4_conv(self.h1_PT_hd4(h1)))) #b,64,16,16
@@ -264,7 +264,7 @@ class UNet_3Plus(nn.Module):
         hd5_UT_hd4 = self.hd5_UT_hd4_GELU(self.hd5_UT_hd4_bn(self.hd5_UT_hd4_conv(self.hd5_UT_hd4(hd5)))) #b,64,16,16
         # hd4 = self.GELU4d_1(self.bn4d_1(self.conv4d_1(
         #     torch.cat((h1_PT_hd4, h2_PT_hd4, h3_PT_hd4, h4_Cat_hd4, hd5_UT_hd4), 1))))
-        hd4 = SpectralNorm(self.conv4d_1(torch.cat((h1_PT_hd4, h2_PT_hd4, h3_PT_hd4, h4_Cat_hd4, hd5_UT_hd4), 1)))
+        hd4 = self.conv4d_1(torch.cat((h1_PT_hd4, h2_PT_hd4, h3_PT_hd4, h4_Cat_hd4, hd5_UT_hd4), 1))
         # b,320,16,16
         h1_PT_hd3 = self.h1_PT_hd3_GELU(self.h1_PT_hd3_bn(self.h1_PT_hd3_conv(self.h1_PT_hd3(h1)))) #b,64,32,32
         h2_PT_hd3 = self.h2_PT_hd3_GELU(self.h2_PT_hd3_bn(self.h2_PT_hd3_conv(self.h2_PT_hd3(h2)))) #b,64,32,32
@@ -273,7 +273,7 @@ class UNet_3Plus(nn.Module):
         hd5_UT_hd3 = self.hd5_UT_hd3_GELU(self.hd5_UT_hd3_bn(self.hd5_UT_hd3_conv(self.hd5_UT_hd3(hd5)))) #b,64,32,32
         # hd3 = self.GELU3d_1(self.bn3d_1(self.conv3d_1(
         #     torch.cat((h1_PT_hd3, h2_PT_hd3, h3_Cat_hd3, hd4_UT_hd3, hd5_UT_hd3), 1)))) #b,320,32,32
-        hd3 = SpectralNorm(self.conv3d_1(torch.cat((h1_PT_hd3, h2_PT_hd3, h3_Cat_hd3, hd4_UT_hd3, hd5_UT_hd3), 1)))
+        hd3 = self.conv3d_1(torch.cat((h1_PT_hd3, h2_PT_hd3, h3_Cat_hd3, hd4_UT_hd3, hd5_UT_hd3), 1))
         h1_PT_hd2 = self.h1_PT_hd2_GELU(self.h1_PT_hd2_bn(self.h1_PT_hd2_conv(self.h1_PT_hd2(h1)))) #b,64,64,64
         h2_Cat_hd2 = self.h2_Cat_hd2_GELU(self.h2_Cat_hd2_bn(self.h2_Cat_hd2_conv(h2))) #b,64,64,64
         hd3_UT_hd2 = self.hd3_UT_hd2_GELU(self.hd3_UT_hd2_bn(self.hd3_UT_hd2_conv(self.hd3_UT_hd2(hd3)))) #b,64,64,64
@@ -282,7 +282,7 @@ class UNet_3Plus(nn.Module):
         # hd2 = self.GELU2d_1(self.bn2d_1(self.conv2d_1(
         #     torch.cat((h1_PT_hd2, h2_Cat_hd2, hd3_UT_hd2, hd4_UT_hd2, hd5_UT_hd2), 1)))) #b,320,64,64
         # hd2,p2 = self.attn2(hd2)
-        hd2 = SpectralNorm(self.conv2d_1(torch.cat((h1_PT_hd2, h2_Cat_hd2, hd3_UT_hd2, hd4_UT_hd2, hd5_UT_hd2), 1)))
+        hd2 = self.conv2d_1(torch.cat((h1_PT_hd2, h2_Cat_hd2, hd3_UT_hd2, hd4_UT_hd2, hd5_UT_hd2), 1))
         h1_Cat_hd1 = self.h1_Cat_hd1_GELU(self.h1_Cat_hd1_bn(self.h1_Cat_hd1_conv(h1))) #b,64,128,128
         hd2_UT_hd1 = self.hd2_UT_hd1_GELU(self.hd2_UT_hd1_bn(self.hd2_UT_hd1_conv(self.hd2_UT_hd1(hd2)))) #b,64,128,128
         hd3_UT_hd1 = self.hd3_UT_hd1_GELU(self.hd3_UT_hd1_bn(self.hd3_UT_hd1_conv(self.hd3_UT_hd1(hd3)))) #b,64,128,128
@@ -290,7 +290,7 @@ class UNet_3Plus(nn.Module):
         hd5_UT_hd1 = self.hd5_UT_hd1_GELU(self.hd5_UT_hd1_bn(self.hd5_UT_hd1_conv(self.hd5_UT_hd1(hd5)))) #b,64,128,128
         # hd1 = self.GELU1d_1(self.bn1d_1(self.conv1d_1(
         #     torch.cat((h1_Cat_hd1, hd2_UT_hd1, hd3_UT_hd1, hd4_UT_hd1, hd5_UT_hd1), 1)))) # b,320,128,128
-        hd1 = SpectralNorm(self.conv1d_1(torch.cat((h1_Cat_hd1, hd2_UT_hd1, hd3_UT_hd1, hd4_UT_hd1, hd5_UT_hd1), 1)))
+        hd1 = self.conv1d_1(torch.cat((h1_Cat_hd1, hd2_UT_hd1, hd3_UT_hd1, hd4_UT_hd1, hd5_UT_hd1), 1))
         # hd1,p1 = self.attn1(hd1)
         d1 = self.outconv1(hd1)  # b,2,128,128
         return F.sigmoid(d1)
