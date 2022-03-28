@@ -29,7 +29,7 @@ class unetConv2(nn.Module):
         #         in_size = out_size
         conv = nn.Sequential(
             nn.Conv2d(in_size,out_size,ks,s,p),
-            nn.BatchNorm2d(out_size),
+            # nn.BatchNorm2d(out_size),
             nn.Conv2d(out_size,out_size,ks,s,p),
             nn.GELU()
             )

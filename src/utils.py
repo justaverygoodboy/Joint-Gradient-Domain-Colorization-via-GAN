@@ -69,17 +69,23 @@ def plot_some(type,test_data, model, device, epoch):
     elif(type=="test"):
       dataLen = len(test_data)
       for idx in range(dataLen):
-        transf = transforms.ToTensor()
         batchL, realAB, filename = test_data[idx]
-        filepath = config.TRAIN_DIR+filename
+        filepath = config.TEST_DIR+filename
         batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
         realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
+        batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
+        batchL_3 = batchL_3.to(device).float()
         batchL = torch.tensor(batchL).to(device).float()
         realAB = torch.tensor(realAB).to(device).float()
         model.eval()
-        realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
-        recLAB = model(realLAB)
-        show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],epoch,idx)
+        batch_predAB = model(batchL_3)
+        batch_predAB = batch_predAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
+        batchL = batchL.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
+        realAB = realAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
+        orig = cv2.imread(filepath)
+        orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (config.IMAGE_SIZE,config.IMAGE_SIZE))
+        preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
+        imag_gird(orig, batchL, preds, epoch-1,idx)
     else:
       indexes = [0, 2, 9]
       for idx in indexes:

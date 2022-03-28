@@ -40,8 +40,8 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       Loss_MSE = nn.MSELoss()(predAB, trainAB) 
       # Loss_Percp = PerceptualLoss()(predLAB,realLAB)
       Loss_Gradient = GradientLoss()(predAB,trainAB)
-      # Loss_G = Loss_WL*0.1 + Loss_MSE + Loss_Percp*0.003 + Loss_Gradient*0.01 #总loss
-      Loss_G = Loss_WL*0.01 + Loss_MSE + Loss_Gradient*0.01 #总loss
+      # Loss_G = Loss_WL*0.001 + Loss_MSE + Loss_Percp*0.000001 + Loss_Gradient*0.001 #总loss
+      Loss_G = Loss_WL*0.001 + Loss_MSE + Loss_Gradient*0.001 #总loss
       Loss_G.backward()
       optG.step() 
       losses['G_losses'].append(Loss_G.item())

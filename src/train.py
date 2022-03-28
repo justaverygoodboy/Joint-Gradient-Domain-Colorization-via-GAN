@@ -47,7 +47,7 @@ def map_fn(index=None, flags=None):
     losses['EPOCH_G_losses'] = []
     losses['EPOCH_D_losses'] = []
     engine.train(train_loader, netGAN, netD, optG, optD, device=DEVICE, losses=losses)
-    if epoch%10==0:
+    if epoch%5==0:
       utils.create_checkpoint("GAN",epoch, netG, optG, netD, optD, max_checkpoint=config.KEEP_CKPT, save_path = config.GAN_CHECKPOINT_DIR)
     utils.plot_some("GAN",train_data, netG, DEVICE, epoch)
     gc.collect()
