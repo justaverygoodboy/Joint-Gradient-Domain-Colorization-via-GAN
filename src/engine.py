@@ -4,23 +4,25 @@ from tqdm import tqdm
 from torch import nn
 # from lossfunc import PerceptualLoss
 from lossfunc import GradientLoss
+from lossfunc import GANLoss
 import numpy as np
 
 def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
   batch = 0
-  def wgan_loss(prediction, real_or_not):
-    if real_or_not:
-      return -torch.mean(prediction.float())
-    else:
-      return torch.mean(prediction.float())
-  def gp_loss(y_pred, averaged_samples, gradient_penalty_weight):
-    gradients = torch.autograd.grad(y_pred,averaged_samples,
-                              grad_outputs=torch.ones(y_pred.size(), device=device),
-                              create_graph=True, retain_graph=True, only_inputs=True)[0]
-    gradients = gradients.view(gradients.size(0), -1)
-    gradient_penalty = (((gradients+1e-16).norm(2, dim=1) - 1) ** 2).mean() * gradient_penalty_weight
-    return gradient_penalty
-
+  # def wgan_loss(prediction, real_or_not):
+  #   if real_or_not:
+  #     return -torch.mean(prediction.float())
+  #   else:
+  #     return torch.mean(prediction.float())
+  # def gp_loss(y_pred, averaged_samples, gradient_penalty_weight):
+  #   gradients = torch.autograd.grad(y_pred,averaged_samples,
+  #                             grad_outputs=torch.ones(y_pred.size(), device=device),
+  #                             create_graph=True, retain_graph=True, only_inputs=True)[0]
+  #   gradients = gradients.view(gradients.size(0), -1)
+  #   gradient_penalty = (((gradients+1e-16).norm(2, dim=1) - 1) ** 2).mean() * gradient_penalty_weight
+  #   return gradient_penalty
+  adversarial_criterion = GANLoss()
+  
   for trainL, trainAB, _ in tqdm(iter(train_loader)):
       batch += 1  
       ########### add noise #################
@@ -30,36 +32,52 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       trainAB = torch.tensor(trainAB, device=device).float()
       # trainL_3 = torch.cat([trainL,z],dim=1) # add noise to grayscale image for training
       ############ GAN MODEL ( Training Generator) ###################
+
       optG.zero_grad()
       predAB, discpred = GAN_Model(trainL, trainL_3) 
       D_G_z1 = discpred.mean().item()
       realLAB = torch.cat([trainL, trainAB], dim=1)
       predLAB = torch.cat([trainL, predAB], dim=1)
       ############ G Loss ##################################
-      Loss_WL = wgan_loss(discpred, True) 
+
+      Loss_adver = adversarial_criterion(discpred, True)
+      # Loss_WL = wgan_loss(discpred, True) 
+      # Loss_Hinge = -discpred.mean()
       Loss_MSE = nn.MSELoss()(predAB, trainAB) 
       # Loss_Percp = PerceptualLoss()(predLAB,realLAB)
       Loss_Gradient = GradientLoss()(predAB,trainAB)
       # Loss_G = Loss_WL*0.001 + Loss_MSE + Loss_Percp*0.000001 + Loss_Gradient*0.001 #总loss
-      Loss_G = Loss_WL*0.001 + Loss_MSE + Loss_Gradient*0.001 #总loss
+      # Loss_G = Loss_Hinge*0.1 + Loss_MSE + Loss_Gradient*0.01 #总loss 初始化先直接使用L2训练，后面再加入对抗损失
+      Loss_G = Loss_adver*0.1 + Loss_MSE + Loss_Gradient*0.01
+      # Loss_G = Loss_MSE
+      
       Loss_G.backward()
       optG.step() 
       losses['G_losses'].append(Loss_G.item())
       losses['EPOCH_G_losses'].append(Loss_G.item())
-
       ############### Discriminator Training #########################
       for param in netD.parameters(): # 将D的设置为可BP
         param.requires_grad = True
       optD.zero_grad()
 
       ###### hinge loss ######
-      ## d_real
+      # d_real
+      # d_out_real = netD(realLAB)
+      # d_loss_real = nn.ReLU()(1.0-d_out_real).mean()
+      # ## d_fake
+      # d_out_fake = netD(predLAB.detach())
+      # d_loss_fake = nn.ReLU()(1.0+d_out_fake).mean()
+      # d_loss = d_loss_real + d_loss_fake
+      # d_loss.backward()
+
+      ###### Unet bce loss ########
       d_out_real = netD(realLAB)
-      d_loss_real = nn.ReLU()(1.0-d_out_real).mean()
-      ## d_fake
+      d_loss_real = adversarial_criterion(d_out_real, True)
       d_out_fake = netD(predLAB.detach())
-      d_loss_fake = nn.ReLU()(1.0+d_out_fake).mean()
-      d_loss = d_loss_real + d_loss_fake
+      d_loss_fake = adversarial_criterion(d_out_fake, False)
+      d_loss = (d_loss_real + d_loss_fake)/2
+      d_loss.backward()
+
       ############## gp ############
       # discpred = netD(predLAB.detach()) #预测图像辨别结果
       # D_G_z2 = discpred.mean().item() #均值
@@ -76,11 +94,12 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       # Loss_D_avg = gp_loss(discavg, averaged_samples, config.GRADIENT_PENALTY_WEIGHT)
       # Loss_D = Loss_D_Fake + Loss_D_Real + Loss_D_avg
       # Loss_D.backward()
-      d_loss.backward()
+
       optD.step()
       losses['D_losses'].append(d_loss.item())
       losses['EPOCH_D_losses'].append(d_loss.item())
-      # Output training stats
+
+      #Output training stats
       if batch % 10 == 0: #原本是100
         print('MSE: %.8f | Loss_Grad:%.8f| Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f |'
             % (Loss_MSE.item(),Loss_Gradient.item(),d_loss.item(), Loss_G.item(), d_loss_real, d_loss_fake))
