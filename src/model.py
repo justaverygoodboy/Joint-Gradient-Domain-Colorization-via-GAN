@@ -537,31 +537,31 @@ class UNet_3Plus_AE(nn.Module):
         return F.sigmoid(d1)
 
 # net D
-class discriminator_model(nn.Module):
-  def __init__(self):
-    super(discriminator_model, self).__init__()
-    self.conv1 = SpectralNorm(nn.Conv2d(3, 64, 4, 2, 1)) # 64,64,64
-    self.conv2 = SpectralNorm(nn.Conv2d(64, 128, 4, 2, 1)) # 128,32,32
-    self.conv3 = SpectralNorm(nn.Conv2d(128, 256, 4, 2, 1)) # 256,16,16
-    self.conv4 = SpectralNorm(nn.Conv2d(256, 512, 4, 2, 1)) # 512,8,8
-    self.conv5 = nn.Conv2d(512, 1, 4) # 1,5,5 
-    self.leaky_ReLU = nn.LeakyReLU(0.1)
-    self.attn1 = Self_Attn(256,'relu')
-    self.attn2 = Self_Attn(512,'relu')
+# class discriminator_model(nn.Module):
+#   def __init__(self):
+#     super(discriminator_model, self).__init__()
+#     self.conv1 = SpectralNorm(nn.Conv2d(3, 64, 4, 2, 1)) # 64,64,64
+#     self.conv2 = SpectralNorm(nn.Conv2d(64, 128, 4, 2, 1)) # 128,32,32
+#     self.conv3 = SpectralNorm(nn.Conv2d(128, 256, 4, 2, 1)) # 256,16,16
+#     self.conv4 = SpectralNorm(nn.Conv2d(256, 512, 4, 2, 1)) # 512,8,8
+#     self.conv5 = nn.Conv2d(512, 1, 4) # 1,5,5 
+#     self.leaky_ReLU = nn.LeakyReLU(0.1)
+#     self.attn1 = Self_Attn(256,'relu')
+#     self.attn2 = Self_Attn(512,'relu')
 
-  def forward(self,input):
-    net = self.conv1(input)              
-    net = self.leaky_ReLU(net)         
-    net = self.conv2(net)              
-    net = self.leaky_ReLU(net)         
-    net = self.conv3(net)              
-    net = self.leaky_ReLU(net)          
-    net,p1 = self.attn1(net)
-    net = self.conv4(net)              
-    net = self.leaky_ReLU(net)
-    net,p2 = self.attn2(net)          
-    net = self.conv5(net)               
-    return net.squeeze()
+#   def forward(self,input):
+#     net = self.conv1(input)              
+#     net = self.leaky_ReLU(net)         
+#     net = self.conv2(net)              
+#     net = self.leaky_ReLU(net)         
+#     net = self.conv3(net)              
+#     net = self.leaky_ReLU(net)          
+#     net,p1 = self.attn1(net)
+#     net = self.conv4(net)              
+#     net = self.leaky_ReLU(net)
+#     net,p2 = self.attn2(net)          
+#     net = self.conv5(net)               
+#     return net.squeeze()
 
 class UNetDiscriminator(nn.Module):
     """Defines a U-Net discriminator with spectral normalization (SN)"""
@@ -591,7 +591,6 @@ class UNetDiscriminator(nn.Module):
         x1 = F.leaky_relu(self.conv1(x0), negative_slope=0.2, inplace=True)
         x2 = F.leaky_relu(self.conv2(x1), negative_slope=0.2, inplace=True)
         x3 = F.leaky_relu(self.conv3(x2), negative_slope=0.2, inplace=True)
-
         # upsample
         x3 = F.interpolate(x3, scale_factor=2, mode="bilinear", align_corners=False)
         x4 = F.leaky_relu(self.conv4(x3), negative_slope=0.2, inplace=True)
@@ -613,7 +612,6 @@ class UNetDiscriminator(nn.Module):
         out = F.leaky_relu(self.conv7(x6), negative_slope=0.2, inplace=True)
         out = F.leaky_relu(self.conv8(out), negative_slope=0.2, inplace=True)
         out = self.conv9(out)
-
         return out
 
 
