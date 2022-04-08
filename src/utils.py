@@ -226,7 +226,20 @@ def plot_gan_loss(G_losses, D_losses,epoch):
   plt.savefig(f'GANLOSS{epoch}.png',figsize=(15,10))
 
 def lab2xyz_tensor(lab):
+  # 传入的lab颜色值域0~1，真实的lab颜色值为l：0~100，a、b：-128~127
   L = lab[:,0:1,:,:,]
   A = lab[:,1:2,:,:,]
   B = lab[:,2:3,:,:,]
   # y = 
+  Xn=96.4221
+  Yn=100.0
+  Zn=82.5221
+  L = L*100
+  A = A*255-128.
+  B = B*255-128.
+  fy = (L+16.)/116
+  fx = (fy+A/500.)
+  fz = fy-b/200.
+  delta = 6/29
+  if fy>delta:
+    Y = Yn*torch.mm(fy,torch.mm(fy,fy))
