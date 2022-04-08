@@ -66,6 +66,7 @@ def plot_some(type,test_data, model, device, epoch):
         realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
         recLAB = model(realLAB)
         show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],epoch,idx)
+    
     elif(type=="test"):
       dataLen = len(test_data)
       for idx in range(dataLen):
@@ -73,9 +74,14 @@ def plot_some(type,test_data, model, device, epoch):
         filepath = config.TEST_DIR+filename
         batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
         realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
-        batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
-        batchL_3 = batchL_3.to(device).float()
-        batchL = torch.tensor(batchL).to(device).float()
+        # batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
+
+        z = torch.randn((1,2,128,128),device=device) # change to normal distribution
+        batchL = torch.tensor(batchL, device=device).float()
+        batchL_3 = torch.cat([batchL,z],dim=1) # add noise to grayscale image for training
+
+        # batchL_3 = batchL_3.to(device).float()
+        # batchL = torch.tensor(batchL).to(device).float()
         realAB = torch.tensor(realAB).to(device).float()
         model.eval()
         batch_predAB = model(batchL_3)
@@ -93,9 +99,15 @@ def plot_some(type,test_data, model, device, epoch):
         filepath = config.TRAIN_DIR+filename
         batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
         realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
-        batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
-        batchL_3 = batchL_3.to(device).float()
-        batchL = torch.tensor(batchL).to(device).float()
+        # batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
+
+
+        z = torch.randn((1,2,128,128),device=device) # change to normal distribution
+        batchL = torch.tensor(batchL, device=device).float()
+        batchL_3 = torch.cat([batchL,z],dim=1) # add noise to grayscale image for training
+
+        # batchL_3 = batchL_3.to(device).float()
+        # batchL = torch.tensor(batchL).to(device).float()
         realAB = torch.tensor(realAB).to(device).float()
         model.eval()
         batch_predAB = model(batchL_3)
@@ -212,3 +224,9 @@ def plot_gan_loss(G_losses, D_losses,epoch):
   plt.ylabel("Loss")
   plt.legend()
   plt.savefig(f'GANLOSS{epoch}.png',figsize=(15,10))
+
+def lab2xyz_tensor(lab):
+  L = lab[:,0:1,:,:,]
+  A = lab[:,1:2,:,:,]
+  B = lab[:,2:3,:,:,]
+  # y = 

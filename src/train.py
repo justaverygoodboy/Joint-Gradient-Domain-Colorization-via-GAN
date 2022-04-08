@@ -11,7 +11,7 @@ import gc
 
 def map_fn(index=None, flags=None):
   torch.set_default_tensor_type('torch.FloatTensor')
-  torch.manual_seed(1) #1234
+  torch.manual_seed(1234) #1234
   train_data = dataset.DATA(config.TRAIN_DIR) 
   train_sampler = torch.utils.data.RandomSampler(train_data) 
   train_loader = torch.utils.data.DataLoader(
@@ -27,8 +27,8 @@ def map_fn(index=None, flags=None):
   netD = model.UNetDiscriminator().float()
   netG = netG.to(DEVICE)
   netD = netD.to(DEVICE)
-  optD = torch.optim.Adam(netD.parameters(), lr=4e-5, betas=(0.5, 0.999)) 
-  optG = torch.optim.Adam(netG.parameters(), lr=1e-5, betas=(0.5, 0.999)) #论文里这里是2e-5
+  optD = torch.optim.Adam(netD.parameters(), lr=4e-5, betas=(0.9, 0.999)) 
+  optG = torch.optim.Adam(netG.parameters(), lr=1e-5, betas=(0.9, 0.999)) #论文里这里是2e-5
   ## Trains
   losses = {
       'G_losses' : [],
@@ -47,7 +47,7 @@ def map_fn(index=None, flags=None):
     losses['EPOCH_G_losses'] = []
     losses['EPOCH_D_losses'] = []
     engine.train(train_loader, netGAN, netD, optG, optD, device=DEVICE, losses=losses)
-    if epoch%1==0:
+    if epoch%10==0:
       utils.create_checkpoint("GAN",epoch, netG, optG, netD, optD, max_checkpoint=config.KEEP_CKPT, save_path = config.GAN_CHECKPOINT_DIR)
     utils.plot_some("GAN",train_data, netG, DEVICE, epoch)
     gc.collect()

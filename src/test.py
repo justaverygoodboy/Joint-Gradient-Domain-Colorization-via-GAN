@@ -8,7 +8,7 @@ warnings.filterwarnings('ignore')
 
 def test():
   torch.set_default_tensor_type('torch.FloatTensor')
-  torch.manual_seed(1) #1234
+  torch.manual_seed(1234) #1234
   test_data = dataset.DATA(config.TEST_DIR) 
   test_sampler = torch.utils.data.RandomSampler(test_data) 
   test_loader = torch.utils.data.DataLoader(

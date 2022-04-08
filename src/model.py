@@ -615,6 +615,17 @@ class UNetDiscriminator(nn.Module):
         return out
 
 
+# def tensorLAB2RGB(l,ab): 怎么把tensor直接从lab转rgb啊
+#   ab = ab.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
+#   l = l.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
+#   img = reconstruct_no(preprocess(l), preprocess(ab)) #img是rgb的numpy
+#   print(img.shape)
+#   img = img[np.newaxis,:]
+#   print(img.shape)
+#   img = torch.from_numpy(img.transpose((0, 3, 1, 2)))
+#   print(img.shape)
+#   return img
+
 class GAN(nn.Module):
   def __init__(self, netG, netD):
     super(GAN, self).__init__()
@@ -626,6 +637,8 @@ class GAN(nn.Module):
       param.requires_grad= False
     predAB = self.netG(trainL_3) 
     predLAB = torch.cat([trainL, predAB], dim=1) 
+    # tensorLAB2RGB(trainL,predAB)
+    # print(predLAB.shape)
     discpred = self.netD(predLAB) 
     return predAB, discpred 
 

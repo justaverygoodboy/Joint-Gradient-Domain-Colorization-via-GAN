@@ -6,7 +6,7 @@ MODEL_DIR = '../models/'
 GAN_CHECKPOINT_DIR = '../checkpoint/'
 AE_CHECKPOINT_DIR = '../ae_checkpoint'
 
-TRAIN_DIR = DATA_DIR+"train/"  # UPDATE
+TRAIN_DIR = DATA_DIR+"asoul128/"  # UPDATE
 TEST_DIR = DATA_DIR+"test/" # UPDATE
 
 os.makedirs(TRAIN_DIR, exist_ok=True)
@@ -20,7 +20,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 IMAGE_SIZE = 128 #初始是224
 BATCH_SIZE = 1
 GRADIENT_PENALTY_WEIGHT = 10
-NUM_EPOCHS = 500#初始是10
+NUM_EPOCHS = 1000#初始是10
 KEEP_CKPT = 2 #init 2
 # save_model_path = MODEL_DIR
 

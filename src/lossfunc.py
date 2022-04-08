@@ -65,13 +65,13 @@ class PerceptualLoss(nn.Module):
         super(PerceptualLoss,self).__init__()
         self.vgg = Vgg19_out().to(device)
         self.criterion = nn.MSELoss()
-        # self.criterion = nn.L1Loss()
+        self.weight = [0.1,0.1,1,1,1]
 
     def forward(self,x,y):
         x_vgg,y_vgg = self.vgg(x),self.vgg(y)
         loss = 0.0
         for iter,(x_fea,y_fea) in enumerate(zip(x_vgg,y_vgg)):
-            loss += self.criterion(x_fea,y_fea.detach())
+            loss += self.criterion(x_fea,y_fea.detach())*self.weight[iter]
         return loss
 
 class GradientLoss(nn.Module):
