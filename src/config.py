@@ -6,7 +6,7 @@ MODEL_DIR = '../models/'
 GAN_CHECKPOINT_DIR = '../checkpoint/'
 AE_CHECKPOINT_DIR = '../ae_checkpoint'
 
-TRAIN_DIR = DATA_DIR+"asoul128/"  # UPDATE
+TRAIN_DIR = DATA_DIR+"toy_train/"  # UPDATE
 TEST_DIR = DATA_DIR+"test/" # UPDATE
 
 os.makedirs(TRAIN_DIR, exist_ok=True)
