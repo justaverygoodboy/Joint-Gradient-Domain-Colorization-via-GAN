@@ -110,7 +110,7 @@ def plot_some(type,test_data, model, device, epoch):
         # batchL = torch.tensor(batchL).to(device).float()
         realAB = torch.tensor(realAB).to(device).float()
         model.eval()
-        batch_predAB = model(batchL_3)
+        batch_predAB,_,_,_,_ = model(batchL_3)
         batch_predAB = batch_predAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
         batchL = batchL.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
         realAB = realAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))

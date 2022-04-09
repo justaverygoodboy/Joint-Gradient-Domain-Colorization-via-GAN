@@ -310,18 +310,18 @@ class UNet_3Plus(nn.Module):
 
         d5 = self.outconv5(hd5)
         d5 = self.upscore5(d5) # 16->256
-        print('d5:',d5.shpae)
+
         d4 = self.outconv4(hd4)
         d4 = self.upscore4(d4) # 32->256
-        print('d4:',d4.shpae)
+
         d3 = self.outconv3(hd3)
         d3 = self.upscore3(d3) # 64->256
-        print('d3:',d3.shpae)
+
         d2 = self.outconv2(hd2)
         d2 = self.upscore2(d2) # 128->256
-        print('d2:',d2.shpae)
+
         d1 = self.outconv1(hd1)
-        print('d1:',d1.shpae)
+
         return F.sigmoid(d1), F.sigmoid(d2), F.sigmoid(d3), F.sigmoid(d4), F.sigmoid(d5)
 
 # class UNet_3Plus_AE(nn.Module):
@@ -667,6 +667,6 @@ class GAN(nn.Module):
     predLAB = torch.cat([trainL, predAB1], dim=1) 
     # tensorLAB2RGB(trainL,predAB)
     # print(predLAB.shape)
-    discpred = self.netD(predLAB1) 
+    discpred = self.netD(predLAB) 
     return predAB1,predAB2,predAB3,predAB4,predAB5, discpred 
 

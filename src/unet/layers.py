@@ -25,17 +25,15 @@ class unetConv2(nn.Module):
         self.padding = padding
         s = stride
         p = padding
-        self.sconv1 = SeparableConv2d(in_size,out_size,ks,s,p)
-        self.sconv2 = SeparableConv2d(out_size,out_size,ks,s,p)
         conv = nn.Sequential(
-            self.sconv1,
-            self.sconv2,
+            nn.Conv2d(in_size,out_size,ks,s,p),
+            nn.Conv2d(out_size,out_size,ks,s,p),
             nn.GELU()
             )
         setattr(self,'conv',conv)
-        # initialise the blocks
-        # for m in self.children():
-        #     init_weights(m, init_type='kaiming')
+        #initialise the blocks
+        for m in self.children():
+            init_weights(m, init_type='kaiming')
 
     def forward(self, inputs):
         x = inputs

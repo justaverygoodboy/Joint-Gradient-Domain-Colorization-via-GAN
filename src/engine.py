@@ -37,9 +37,9 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       predAB1,predAB2,predAB3,predAB4,predAB5, discpred = GAN_Model(trainL, trainL_3) 
       # D_G_z1 = discpred.mean().item()
       realLAB = torch.cat([trainL, trainAB], dim=1)
-      predLAB1 = torch.cat([trainL, predAB1], dim=1)
+      predLAB = torch.cat([trainL, predAB1], dim=1)
       ############ G Loss ##################################
-      # Loss_adver = adversarial_criterion(discpred, True)
+      Loss_adver = adversarial_criterion(discpred, True)
       # Loss_WL = wgan_loss(discpred, True) 
       # Loss_Hinge = -discpred.mean()
       Loss_L1_1 = nn.L1Loss()(predAB1, trainAB) 
@@ -48,44 +48,44 @@ def train(train_loader, GAN_Model, netD, optG, optD, device, losses):
       Loss_L1_4 = nn.L1Loss()(predAB4, trainAB) 
       Loss_L1_5 = nn.L1Loss()(predAB5, trainAB) 
       Loss_L1 = Loss_L1_1+Loss_L1_2+Loss_L1_3+Loss_L1_4+Loss_L1_5 
-      # Loss_Percp = PerceptualLoss()(predLAB,realLAB)
-      # Loss_Gradient = GradientLoss()(predAB,trainAB)
-      # Loss_G = Loss_adver*0.01 + Loss_L1 + Loss_Gradient*0.01 + Loss_Percp*0.00001
+      Loss_Percp = PerceptualLoss()(predLAB,realLAB)
+      Loss_Gradient = GradientLoss()(predAB1,trainAB)
+      Loss_G = Loss_adver*0.01 + Loss_L1 + Loss_Gradient*0.01 + Loss_Percp*0.001
       Loss_G = Loss_L1
       Loss_G.backward()
       optG.step() 
       losses['G_losses'].append(Loss_G.item())
       losses['EPOCH_G_losses'].append(Loss_G.item())
       ############### Discriminator Training #########################
-      # for param in netD.parameters(): # 将D的设置为可BP
-      #   param.requires_grad = True
-      # optD.zero_grad()
+      for param in netD.parameters(): # 将D的设置为可BP
+        param.requires_grad = True
+      optD.zero_grad()
 
-      # ###### hinge loss ######
-      # # d_real
-      # # d_out_real = netD(realLAB)
-      # # d_loss_real = nn.ReLU()(1.0-d_out_real).mean()
-      # # ## d_fake
-      # # d_out_fake = netD(predLAB.detach())
-      # # d_loss_fake = nn.ReLU()(1.0+d_out_fake).mean()
-      # # d_loss = d_loss_real + d_loss_fake
-      # # d_loss.backward()
-
-      # ###### Unet bce loss ########
+      ###### hinge loss ######
+      # d_real
       # d_out_real = netD(realLAB)
-      # d_loss_real = adversarial_criterion(d_out_real, True)
+      # d_loss_real = nn.ReLU()(1.0-d_out_real).mean()
+      # ## d_fake
       # d_out_fake = netD(predLAB.detach())
-      # d_loss_fake = adversarial_criterion(d_out_fake, False)
-      # d_loss = (d_loss_real + d_loss_fake)/2
+      # d_loss_fake = nn.ReLU()(1.0+d_out_fake).mean()
+      # d_loss = d_loss_real + d_loss_fake
       # d_loss.backward()
 
-      # optD.step()
-      # losses['D_losses'].append(d_loss.item())
-      # losses['EPOCH_D_losses'].append(d_loss.item())
+      ###### Unet bce loss ########
+      d_out_real = netD(realLAB)
+      d_loss_real = adversarial_criterion(d_out_real, True)
+      d_out_fake = netD(predLAB.detach())
+      d_loss_fake = adversarial_criterion(d_out_fake, False)
+      d_loss = (d_loss_real + d_loss_fake)/2
+      d_loss.backward()
 
-      #Output training stats
-      # if batch % 100 == 0: #原本是100
-      #   print('L1: %.8f | Loss_Perc:%.8f |Loss_Grad:%.8f | Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f |'
-      #       % (Loss_L1.item(),Loss_Percp.item(),Loss_Gradient.item(),d_loss.item(), Loss_G.item(), d_loss_real, d_loss_fake))
+      optD.step()
+      losses['D_losses'].append(d_loss.item())
+      losses['EPOCH_D_losses'].append(d_loss.item())
+
+      # Output training stats
+      if batch % 100 == 0: #原本是100
+        print('L1: %.8f | Loss_Perc:%.8f |Loss_Grad:%.8f | Loss_D: %.8f | Loss_G: %.8f | D(x): %.8f | D(G(z)): %.8f |'
+            % (Loss_L1.item(),Loss_Percp.item(),Loss_Gradient.item(),d_loss.item(), Loss_G.item(), d_loss_real, d_loss_fake))
 
       
