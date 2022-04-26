@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 def preprocess(imgs):
   try:
     imgs = imgs.detach().numpy()
@@ -42,8 +43,8 @@ def show_test_img(L,AB,epoch,idx): #单纯的保存图片，输入tensor L，AB
   plt.imshow(img)
   plt.savefig(f'test_{epoch}_{idx}')
 
-def show_single_channel(x,name): #保存单通道图片 输入tensor和保存name
-  x = x.cpu().numpy().reshape((x.shape[2],x.shape[2],1))
+def show_single_img(x,c,name): #保存单张图片【输入tensor图片，通道数，名字】
+  x = x.cpu().numpy().reshape((x.shape[2],x.shape[2],c))
   x = preprocess(x)
   plt.imshow(x)
   plt.savefig(f'test_{name}')
@@ -52,8 +53,7 @@ def plot_some(type,test_data, model, device, epoch):
   with torch.no_grad():
     if (type=="AE"):
       # dataLen = len(test_data)
-      indexes = [0, 9]
-      # for idx in range(dataLen):
+      indexes = [0,1,2,3,4,5,6,7,8,9]
       for idx in indexes:
         transf = transforms.ToTensor()
         batchL, realAB, filename = test_data[idx]
@@ -61,12 +61,13 @@ def plot_some(type,test_data, model, device, epoch):
         batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
         realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
         batchL = torch.tensor(batchL).to(device).float()
-        realAB = torch.tensor(realAB).to(device).float()
+        # realAB = torch.tensor(realAB).to(device).float()
+        noiseAB = torch.randn(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE,device=device)
         model.eval()
-        realLAB = torch.cat([batchL, realAB], dim=1) #真实的图像
-        recLAB = model(realLAB)
+        realLAB = torch.cat([batchL, noiseAB], dim=1) #真实的图像
+        recAB = model(realLAB)
+        recLAB = torch.cat([batchL,recAB],dim=1)
         show_test_img(recLAB[:,0:1,:,:,],recLAB[:,1:3,:,:,],epoch,idx)
-    
     elif(type=="test"):
       dataLen = len(test_data)
       for idx in range(dataLen):
@@ -74,17 +75,16 @@ def plot_some(type,test_data, model, device, epoch):
         filepath = config.TEST_DIR+filename
         batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
         realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
-        # batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
+        batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
 
-        z = torch.randn((1,2,128,128),device=device) # change to normal distribution
-        batchL = torch.tensor(batchL, device=device).float()
-        batchL_3 = torch.cat([batchL,z],dim=1) # add noise to grayscale image for training
-
-        # batchL_3 = batchL_3.to(device).float()
-        # batchL = torch.tensor(batchL).to(device).float()
+        # z = torch.randn((1,2,config.IMAGE_SIZE,config.IMAGE_SIZE),device=device) # change to normal distribution
+        # batchL = torch.tensor(batchL, device=device).float()
+        # batchL_3 = torch.cat([batchL,z],dim=1) # add noise to grayscale image for training
+        batchL_3 = batchL_3.to(device).float()
+        batchL = torch.tensor(batchL).to(device).float()
         realAB = torch.tensor(realAB).to(device).float()
         model.eval()
-        batch_predAB = model(batchL_3)
+        batch_predAB,_,_ = model(batchL_3)
         batch_predAB = batch_predAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
         batchL = batchL.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
         realAB = realAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
@@ -93,24 +93,23 @@ def plot_some(type,test_data, model, device, epoch):
         preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
         imag_gird(orig, batchL, preds, epoch-1,idx)
     else:
-      indexes = [0, 2, 9]
+      indexes = [32, 12]
       for idx in indexes:
         batchL, realAB, filename = test_data[idx]
         filepath = config.TRAIN_DIR+filename
         batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
         realAB = realAB.reshape(1,2,config.IMAGE_SIZE,config.IMAGE_SIZE)
-        # batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
+        batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1]))
 
+        # z = torch.randn((1,2,config.IMAGE_SIZE,config.IMAGE_SIZE),device=device) # change to normal distribution
+        # batchL = torch.tensor(batchL, device=device).float()
+        # batchL_3 = torch.cat([batchL,z],dim=1) # add noise to grayscale image for training
 
-        z = torch.randn((1,2,128,128),device=device) # change to normal distribution
-        batchL = torch.tensor(batchL, device=device).float()
-        batchL_3 = torch.cat([batchL,z],dim=1) # add noise to grayscale image for training
-
-        # batchL_3 = batchL_3.to(device).float()
-        # batchL = torch.tensor(batchL).to(device).float()
+        batchL_3 = batchL_3.to(device).float()
+        batchL = torch.tensor(batchL).to(device).float()
         realAB = torch.tensor(realAB).to(device).float()
         model.eval()
-        batch_predAB,_,_,_,_ = model(batchL_3)
+        batch_predAB,_,_ = model(batchL_3)
         batch_predAB = batch_predAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
         batchL = batchL.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
         realAB = realAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
@@ -118,16 +117,41 @@ def plot_some(type,test_data, model, device, epoch):
         orig = cv2.resize(cv2.cvtColor(orig, cv2.COLOR_BGR2RGB), (config.IMAGE_SIZE,config.IMAGE_SIZE))
         preds = reconstruct_no(preprocess(batchL), preprocess(batch_predAB))
         imag_gird(orig, batchL, preds, epoch-1,idx)
+# def save_att(test_data,model,device):
+  
+def save_test_images(test_data, model, device):
+  with torch.no_grad():
+    dataLen = len(test_data)
+    for idx in range(dataLen):
+      batchL,_,_ = test_data[idx]
+      batchL = batchL.reshape(1,1,config.IMAGE_SIZE,config.IMAGE_SIZE)
+      batchL_3 = torch.tensor(np.tile(batchL, [1, 3, 1, 1])).to(device).float()
+      batchL = torch.tensor(batchL).to(device).float()
+      model.eval()
+      batch_predAB,_,_ = model(batchL_3)
+      batch_predAB = batch_predAB.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,2))
+      batchL = batchL.cpu().numpy().reshape((config.IMAGE_SIZE,config.IMAGE_SIZE,1))
+      batch_predAB = preprocess(batch_predAB)
+      batchL = preprocess(batchL)
+      batchL = batchL.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,1) 
+      batch_predAB = batch_predAB.reshape(config.IMAGE_SIZE,config.IMAGE_SIZE,2)
+      result = np.concatenate((batchL, batch_predAB), axis=2)
+      result = cv2.cvtColor(result, cv2.COLOR_Lab2BGR)
+      cv2.imwrite(f'../sample/preds_{idx}.jpg',result)
 
-def create_checkpoint(type,epoch, netG, optG, netD, optD, max_checkpoint, save_path=config.GAN_CHECKPOINT_DIR):
+
+
+def create_checkpoint(type,epoch, netG, optG, netDimg, optDimg,netDgrad,optDgrad, max_checkpoint, save_path=config.GAN_CHECKPOINT_DIR):
   print('Saving Model and Optimizer weights.....')
   if (type!="AE"):
     checkpoint = {
           'epoch' : epoch,
           'generator_state_dict' :netG.state_dict(),
           'generator_optimizer': optG.state_dict(),
-          'discriminator_state_dict': netD.state_dict(),
-          'discriminator_optimizer': optD.state_dict()
+          'discriminator_img_state_dict': netDimg.state_dict(),
+          'discriminator_img_optimizer': optDimg.state_dict(),
+          'discriminator_grad_state_dict': netDgrad.state_dict(),
+          'discriminator_grad_optimizer': optDgrad.state_dict(),
       }
   else:
     checkpoint = {
@@ -143,7 +167,28 @@ def create_checkpoint(type,epoch, netG, optG, netD, optD, max_checkpoint, save_p
   if len(sorted_files) > max_checkpoint:
     os.remove(sorted_files[-1])
 
-def load_checkpoint(type,checkpoint_directory, netG, optG, netD, optD, device):
+
+def load_pretrained(checkpoint_directory, netG, device):
+  load_from_checkpoint = False
+  files = glob.glob(os.path.expanduser(f"{checkpoint_directory}*"))
+  for file in files:
+      if file.endswith('.pt'):
+          load_from_checkpoint=True
+          break
+  if load_from_checkpoint:
+      print('Loading Model and optimizer states from checkpoint....')
+      sorted_files = sorted(files, key=lambda t: -os.stat(t).st_mtime)
+      checkpoint = torch.load(f'{sorted_files[0]}')
+      epoch_checkpoint = checkpoint['epoch'] + 1
+      netG.load_state_dict(checkpoint['generator_state_dict'],strict=False)
+      netG.to(device)
+      print('Loaded Pretrained Generator!!!')
+      print(f'It looks like the this states belong to epoch {epoch_checkpoint-1}.')
+      return netG, epoch_checkpoint
+  else:
+      assert False
+
+def load_checkpoint(type,checkpoint_directory, netG, optG, netDimg, optDimg,netDgrad,optDgrad, device):
   if (type=="AE"): # ae中是 load_checkpoint(type,dir,net,opt,None,None,device)
     load_from_checkpoint = False
     files = glob.glob(os.path.expanduser(f"{checkpoint_directory}*"))
@@ -156,12 +201,12 @@ def load_checkpoint(type,checkpoint_directory, netG, optG, netD, optD, device):
         sorted_files = sorted(files, key=lambda t: -os.stat(t).st_mtime)
         checkpoint = torch.load(f'{sorted_files[0]}')
         epoch_checkpoint = checkpoint['epoch'] + 1
-        netG.load_state_dict(checkpoint['AE_state_dict'])
+        netG.load_state_dict(checkpoint['AE_state_dict'],strict=False)
         netG.to(device)
-        optG.load_state_dict(checkpoint['AE_optimizer'])
+        # optG.load_state_dict(checkpoint['AE_optimizer'])
         print('Loaded States !!!')
         print(f'It looks like the this states belong to epoch {epoch_checkpoint-1}.')
-        return netG, optG, epoch_checkpoint
+        return netG, epoch_checkpoint #optG, epoch_checkpoint
     else:
         print('There are no checkpoints.')
         epoch_checkpoint = 1
@@ -178,7 +223,7 @@ def load_checkpoint(type,checkpoint_directory, netG, optG, netD, optD, device):
         sorted_files = sorted(files, key=lambda t: -os.stat(t).st_mtime)
         checkpoint = torch.load(f'{sorted_files[0]}')
         epoch_checkpoint = checkpoint['epoch'] + 1
-        netG.load_state_dict(checkpoint['generator_state_dict'])
+        netG.load_state_dict(checkpoint['generator_state_dict'],strict=False)
         netG.to(device)
         print('Loaded States !!!')
         print(f'It looks like the this states belong to epoch {epoch_checkpoint-1}.')
@@ -186,7 +231,7 @@ def load_checkpoint(type,checkpoint_directory, netG, optG, netD, optD, device):
     else:
         print('There are no checkpoints in the mentioned directoy, the Model will train from scratch.')
         epoch_checkpoint = 1
-        return netG, optG, netD, optD, epoch_checkpoint
+        return netG, epoch_checkpoint
   else:
     load_from_checkpoint = False
     files = glob.glob(os.path.expanduser(f"{checkpoint_directory}*"))
@@ -199,31 +244,34 @@ def load_checkpoint(type,checkpoint_directory, netG, optG, netD, optD, device):
         sorted_files = sorted(files, key=lambda t: -os.stat(t).st_mtime)
         checkpoint = torch.load(f'{sorted_files[0]}')
         epoch_checkpoint = checkpoint['epoch'] + 1
-        netG.load_state_dict(checkpoint['generator_state_dict'])
+        netG.load_state_dict(checkpoint['generator_state_dict'],strict=False)
         netG.to(device)
         optG.load_state_dict(checkpoint['generator_optimizer'])
-        netD.load_state_dict(checkpoint['discriminator_state_dict'])
-        netD.to(device)
-        optD.load_state_dict(checkpoint['discriminator_optimizer'])
+        netDimg.load_state_dict(checkpoint['discriminator_img_state_dict'],strict=False)
+        netDimg.to(device)
+        optDimg.load_state_dict(checkpoint['discriminator_img_optimizer'])
+        netDgrad.load_state_dict(checkpoint['discriminator_grad_state_dict'],strict=False)
+        netDgrad.to(device)
+        optDgrad.load_state_dict(checkpoint['discriminator_grad_optimizer'])
         print('Loaded States !!!')
         print(f'It looks like the this states belong to epoch {epoch_checkpoint-1}.')
         print(f'so the model will train for {config.NUM_EPOCHS - (epoch_checkpoint-1)} more epochs.')
         print(f'If you want to train for more epochs, change the "NUM_EPOCHS" in config.py !!')
-        return netG, optG, netD, optD, epoch_checkpoint
+        return netG, optG, netDimg, optDimg,netDgrad,optDgrad, epoch_checkpoint
     else:
         print('There are no checkpoints in the mentioned directoy, the Model will train from scratch.')
         epoch_checkpoint = 1
-        return netG, optG, netD, optD, epoch_checkpoint
+        return netG, optG, netDimg, optDimg,netDgrad,optDgrad, epoch_checkpoint
     
-def plot_gan_loss(G_losses, D_losses,epoch):
-  plt.figure(figsize=(10,5))
-  plt.title(f"Generator and Discriminator Loss During Training ")
-  plt.plot(G_losses,label="G")
-  plt.plot(D_losses,label="D")
-  plt.xlabel("iterations")
-  plt.ylabel("Loss")
-  plt.legend()
-  plt.savefig(f'GANLOSS{epoch}.png',figsize=(15,10))
+# def plot_gan_loss(G_losses, D_losses,epoch):
+#   plt.figure(figsize=(10,5))
+#   plt.title(f"Generator and Discriminator Loss During Training ")
+#   plt.plot(G_losses,label="G")
+#   plt.plot(D_losses,label="D")
+#   plt.xlabel("iterations")
+#   plt.ylabel("Loss")
+#   plt.legend()
+#   plt.savefig(f'GANLOSS{epoch}.png',figsize=(15,10))
 
 # def lab2xyz_tensor(lab):
 #   # 传入的lab颜色值域0~1，真实的lab颜色值为l：0~100，a、b：-128~127

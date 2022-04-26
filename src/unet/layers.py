@@ -27,6 +27,7 @@ class unetConv2(nn.Module):
         p = padding
         conv = nn.Sequential(
             nn.Conv2d(in_size,out_size,ks,s,p),
+            nn.GELU(), #加入一层gelu
             nn.Conv2d(out_size,out_size,ks,s,p),
             nn.GELU()
             )

@@ -2,6 +2,7 @@ import os
 import cv2
 import config
 import numpy as np
+import torch
 
 class DATA():
     def __init__(self, dirname, max_len=None):
